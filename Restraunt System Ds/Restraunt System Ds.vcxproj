@@ -24,6 +24,7 @@
     <ClInclude Include="Cheif.h" />
     <ClInclude Include="Cook_Ords.h" />
     <ClInclude Include="Fit_Tables.h" />
+    <ClInclude Include="LinkedQueue.h" />
     <ClInclude Include="Node.h" />
     <ClInclude Include="Order.h" />
     <ClInclude Include="Pend_OVC.h" />
@@ -33,7 +34,6 @@
     <ClInclude Include="Restaurant.h" />
     <ClInclude Include="Scooter.h" />
     <ClInclude Include="Stack.h" />
-    <ClInclude Include="Queue.h" />
     <ClInclude Include="Table.h" />
     <ClInclude Include="UI.h" />
   </ItemGroup>

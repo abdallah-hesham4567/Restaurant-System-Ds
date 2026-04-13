@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClInclude Include="Action.h" />
     <ClInclude Include="Cancel_Action.h" />
-    <ClInclude Include="Cheif.h" />
+    <ClInclude Include="Chef.h" />
     <ClInclude Include="Cook_Ords.h" />
     <ClInclude Include="Fit_Tables.h" />
     <ClInclude Include="LinkedQueue.h" />
@@ -40,7 +40,7 @@
   <ItemGroup>
     <ClCompile Include="Action.cpp" />
     <ClCompile Include="Cancel_Action.cpp" />
-    <ClCompile Include="Cheif.cpp" />
+    <ClCompile Include="Chef.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Order.cpp" />
     <ClCompile Include="Request_Action.cpp" />

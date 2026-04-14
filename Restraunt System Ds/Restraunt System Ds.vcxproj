@@ -45,8 +45,6 @@
     <ClCompile Include="Order.cpp" />
     <ClCompile Include="Request_Action.cpp" />
     <ClCompile Include="Restaurant.cpp" />
-    <ClCompile Include="Scooter.cpp" />
-    <ClCompile Include="Table.cpp" />
     <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

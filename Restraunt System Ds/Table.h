@@ -12,31 +12,18 @@ private:
     int  freeTime;    // timestep when table becomes fully free
 
 public:
-    Table(int id, int cap)
-        : ID(id), capacity(cap), freeSeats(cap),
-        sharable(false), freeTime(0) {
-    }
+    Table(int id, int cap);
+       
 
-    int  getID() { return ID; }
-    int  getCapacity() { return capacity; }
-    int  getFreeSeats() { return freeSeats; }
-    bool isSharable() { return sharable; }
-    int  getFreeTime() { return freeTime; }
+    int  getID(); 
+    int  getCapacity();
+    int  getFreeSeats();
+    bool isSharable();
+    int  getFreeTime();
 
-    void reserveSeats(int s, int duration, int currentTime, bool share) {
-        freeSeats -= s;
-        sharable = share;
-        freeTime = currentTime + duration;
-    }
+    void reserveSeats(int s, int duration, int currentTime, bool share);
 
-    void releaseSeats(int s) {
-        freeSeats += s;
-        if (freeSeats == capacity) sharable = false;
-    }
+    void releaseSeats(int s);
+    friend ostream& operator<<(ostream& out, Table* t);
 
-    friend ostream& operator<<(ostream& out, Table* t) {
-        out << "[T" << t->ID << " cap:" << t->capacity
-            << " free:" << t->freeSeats << "]";
-        return out;
-    }
 };

@@ -1,5 +1,6 @@
 #include "UI.h"
 // UI.cpp
+using namespace std;
 void UI::readMode(bool& interactive) {
     int choice;
     cout << "Select mode: 1-Interactive  2-Silent: ";
@@ -12,9 +13,29 @@ void UI::readFileNames(string& in, string& out) {
     cout << "Enter output file name: "; cin >> out;
 }
 
-
-// some errors as some classes arenot complete
-void UI::printTimestep(int timestep, ...) {
+void  UI ::printTimestep(
+    int timestep,
+    LinkedQueue<Action*>& actions,
+    LinkedQueue<Order*>& pendODG,
+    LinkedQueue<Order*>& pendODN,
+    LinkedQueue<Order*>& pendOT,
+    LinkedQueue<Order*>& pendOVN,
+    Pend_OVC& pendOVC,
+    PriQueue<Order*>& pendOVG,
+    LinkedQueue<Chef*>& freeCS,
+    LinkedQueue<Chef*>& freeCN,
+    Cook_Ords& cooking,
+    LinkedQueue<Order*>& rdyOT,
+    RDY_OV& rdyOV,
+    LinkedQueue<Order*>& rdyOD,
+    PriQueue<Scooter*>& freeScooters,
+    Fit_Tables& freeTables,
+    PriQueue<Order*>& inService,
+    LinkedQueue<Scooter*>& maintScooters,
+    PriQueue<Scooter*>& backScooters,
+    Stack<Order*>& finished,
+    LinkedQueue<Order*>& cancelled
+) {
     cout << "Current Timestep: " << timestep << endl;
 
     cout << "=============== Actions List ================\n";

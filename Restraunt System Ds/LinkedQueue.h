@@ -1,5 +1,7 @@
 #pragma once
 #include "Node.h"
+#include <iostream>
+using namespace std;
 
 template <class T>
 class LinkedQueue {

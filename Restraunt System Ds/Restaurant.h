@@ -206,8 +206,6 @@ public:
         }
     }
 
-    // ── PHASE 1.2: RANDOM SIMULATE ───────────────────
-
     void randomSimulate() {
         // setup resources (hardcoded for phase 1.2)
         CS_count = 15; CN_count = 20;
@@ -241,15 +239,19 @@ public:
                 else if (pick == 5 && !PEND_OVG.isEmpty()) o = PEND_OVG.dequeue();
                 if (!o) continue;
 
+
                 // pick random chef (CS or CN)
-               /* Chef* c = nullptr;
+                Chef* c = nullptr;
                 if (!FREE_CS.isEmpty() && !FREE_CN.isEmpty())
                     c = (rand() % 2 == 0) ? FREE_CS.dequeue() : FREE_CN.dequeue();
                 else if (!FREE_CS.isEmpty()) c = FREE_CS.dequeue();
-                else if (!FREE_CN.isEmpty()) c = FREE_CN.dequeue();*/
-                   
-				
+                else if (!FREE_CN.isEmpty()) c = FREE_CN.dequeue();
 
+                // there is no need to check if c is null because of the loop condition
+
+
+
+                // assign order to chef and move to cooking
 
                 o->setTA(timestep);
                 // priority in cooking = cook time = ceil(size / chefSpeed)
@@ -306,7 +308,7 @@ public:
 
             // ── STEP 3.4: cancel random OVC from PEND_OVC ──
             int cancelID = rand() % 1000;
-             //////////////    abdallah hesham doesnot make yet 
+            //////////////    abdallah hesham doesnot make yet 
 
             if (PEND_OVC.CancelOrder(cancelID)) {
                 // find the order and add to CANCELLED
@@ -376,10 +378,12 @@ public:
         }
 
         cout << "\n=== SIMULATION DONE at timestep " << timestep << " ===\n";
-       
+
     }
 
-   
+
+
+    
 };
 
 

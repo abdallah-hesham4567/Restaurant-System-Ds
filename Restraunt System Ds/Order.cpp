@@ -2,7 +2,7 @@
 
 // ================= Constructors =================
 
-Order::Order(int id, ORD_TYPE t, int tq, int s, float p)
+Order::Order(int id, ORD_TYPE t, int tq, int s, double p)
 {
     ID = id; type = t; TQ = tq; size = s; price = p;
 
@@ -15,8 +15,8 @@ Order::Order(int id, ORD_TYPE t, int tq, int s, float p)
     status = PENDING;
 }
 
-Order::Order(int id, ORD_TYPE t, int tq, int s, float p,
-    int st, int dur, bool share)
+Order::Order(int id, ORD_TYPE t, int tq, int s, double p,
+    int st, double dur, bool share)
 {
     ID = id; type = t; TQ = tq; size = s; price = p;
 
@@ -32,7 +32,7 @@ Order::Order(int id, ORD_TYPE t, int tq, int s, float p,
     status = PENDING;
 }
 
-Order::Order(int id, ORD_TYPE t, int tq, int s, float p, int dist)
+Order::Order(int id, ORD_TYPE t, int tq, int s, double p, int dist)
 {
     ID = id; type = t; TQ = tq; size = s; price = p;
 

@@ -2,7 +2,8 @@
 #include <iostream>
 using namespace std;
 
-enum ORD_TYPE { ODG, ODN, OT, OVC, OVG, OVN };
+
+enum ORD_TYPE { OD, ODG, ODN, OT, OV, OVC, OVG, OVN };
 enum ORD_STATUS { PENDING, COOKING, READY, SERV, DONE };
 
 class Order
@@ -15,12 +16,12 @@ private:
 
     int TQ, TA, TR, TS, TF;
     int size;
-    float price;
+    double price;
     int chefID;
 
     // Dine-in
     int seats;
-    int duration;
+    double duration;
     bool canShare;
     int tableID;
 
@@ -30,9 +31,9 @@ private:
 
 public:
     // Constructors
-    Order(int id, ORD_TYPE t, int tq, int s, float p);
-    Order(int id, ORD_TYPE t, int tq, int s, float p, int st, int dur, bool share);
-    Order(int id, ORD_TYPE t, int tq, int s, float p, int dist);
+    Order(int id, ORD_TYPE t, int tq, int s, double p);
+    Order(int id, ORD_TYPE t, int tq, int s, double p, int st, double dur, bool share);
+    Order(int id, ORD_TYPE t, int tq, int s, double p, int dist);
 
     // Getters
     int getID();

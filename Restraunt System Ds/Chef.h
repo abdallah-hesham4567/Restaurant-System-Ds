@@ -16,7 +16,7 @@ private:
 public:
     
 
-    Chef(int id, string t);
+    Chef(int id, string t,int speed);
 
     int getID();
     string getType();

@@ -1,9 +1,12 @@
 #pragma once
 #include "Action.h"
+#include "Order.h"
+
+
 class Request_Action : public Action
 {   
     private:
-    ORDER_TYPE Order_Type;
+    ORD_TYPE Order_Type;
     int ID;
     int Size;
     double Price;
@@ -17,7 +20,7 @@ class Request_Action : public Action
     int Distance;
 
     public:
-    Request_Action(ORDER_TYPE ot, int t, int i, int s, double p);
+    Request_Action(ORD_TYPE ot, int t, int i, int s, double p);
     
 
     bool SetOD(int num, double dur, bool CS);

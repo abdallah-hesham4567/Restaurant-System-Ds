@@ -21,6 +21,7 @@ bool Request_Action::SetOD(int num, double dur, bool CS)
             Num_Seats = num;
             Duration = dur;
             CanShare = CS;
+            return true;
         }
         else
         {
@@ -32,6 +33,7 @@ bool Request_Action::SetOV(int d)
     if(Order_Type == ORD_TYPE::OV)
     {
         Distance = d;
+        return true;
     }
     else
     {

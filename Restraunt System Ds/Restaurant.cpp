@@ -92,3 +92,33 @@ void randomSimulate() {
         cin.get();
     }
 }
+
+void Restaurant::AddOrder(Order* ord)
+{
+    switch (ord->getType()) {
+    case ORD_TYPE::ODG:
+        PEND_ODG.enqueue(ord);
+        break;
+    case ORD_TYPE::ODN:
+        PEND_ODN.enqueue(ord);
+        break;
+    case ORD_TYPE::OT:
+        PEND_OT.enqueue(ord);
+        break;
+    case ORD_TYPE::OVN:
+        PEND_OVN.enqueue(ord);
+        break;
+    case ORD_TYPE::OVG:
+        PEND_OVG.enqueue(ord, ord->getPriority());
+        break;
+
+
+    }
+}
+bool Restaurant::CancelOrder(int id)
+{
+    if (PEND_OVC.Cancel_Order(id))
+        return true;
+    else
+        return false;
+}

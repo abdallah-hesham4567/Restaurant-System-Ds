@@ -3,7 +3,7 @@
 class Request_Action : public Action
 {   
     private:
-    ORD_TYPE Order_Type;
+    ORDER_TYPE Order_Type;
     int ID;
     int Size;
     double Price;
@@ -17,7 +17,7 @@ class Request_Action : public Action
     int Distance;
 
     public:
-    Request_Action(ORD_TYPE ot, int t, int i, int s, double p);
+    Request_Action(ORDER_TYPE ot, int t, int i, int s, double p);
     
 
     bool SetOD(int num, double dur, bool CS);

@@ -28,8 +28,12 @@ private:
     LinkedQueue<Order*>    PEND_ODN;   // dine-in normal
     LinkedQueue<Order*>    PEND_OT;    // takeaway
     LinkedQueue<Order*>    PEND_OVN;   // delivery normal
-    Pend_OVC               PEND_OVC;   // delivery cancel — derived, has CancelOrder()
+
+
+    Pend_OVC               PEND_OVC;   // delivery cold (can be canceled)
     PriQueue<Order*>       PEND_OVG;   // delivery VIP
+
+
 
     // (2) Free chefs
     LinkedQueue<Chef*>     FREE_CS;    // senior chefs
@@ -122,6 +126,12 @@ public:
         scooter_count(0), table_count(0),
         interactiveMode(true) {
     }
+    //Helpers
+    void AddOrder(Order* ord);
+    bool CancelOrder(int id);
+
+
+
 
     // ── GETTERS (needed by Action classes) ───────────
     LinkedQueue<Order*>& getPendODG() { return PEND_ODG; }

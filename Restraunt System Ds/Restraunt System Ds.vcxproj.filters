@@ -57,9 +57,6 @@
     <ClInclude Include="Request_Action.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Cancel_Action.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Restaurant.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -72,6 +69,9 @@
     <ClInclude Include="Chef.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Cancel_Action.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Order.cpp">
@@ -81,9 +81,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Request_Action.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Cancel_Action.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Restaurant.cpp">
@@ -102,6 +99,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Table.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Cancel_Action.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,6 +1,5 @@
 #pragma once
-#include<Restaurant.h>
-enum ORDER_TYPE { OD, ODG, ODN, OT, OV, OVC, OVG, OVN };
+#include"Restaurant.h"
 
 class Action
 {

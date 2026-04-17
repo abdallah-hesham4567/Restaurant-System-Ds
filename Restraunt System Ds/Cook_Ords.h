@@ -12,7 +12,7 @@ public:
 
         while (Curr)
         {
-            if (Curr->item->getID() == ID)
+            if (Curr->item->getID() == ID && Curr->item->getType() == OVC)
             {
                 if (prev == nullptr)
                     head = Curr->next;

@@ -4,8 +4,13 @@
 
 
 
-Chef::Chef(int id, string t)
+Chef::Chef(int id, string t, int speed)
 {
+    if (t == "CN")
+        setCNSpeed(speed);
+    else
+        setCSSpeed(speed);
+
     ID = id;
     type = t;
     busy = false;

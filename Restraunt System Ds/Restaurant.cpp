@@ -85,7 +85,7 @@ void Restaurant::loadScooters()
 {
     for (int i = 1; i <= scooterCount; i++)
     {
-        Scooter* s = new Scooter(i, 100, 4, 3);
+        Scooter* s = new Scooter(i, 100, 1, 3);
         freeScooters.enqueue(s, -(int)s->getDistanceCut());
     }
 }
@@ -391,7 +391,56 @@ void Restaurant::updateCooking(int timestep)
 Ready -> Service
 ==================================================
 */
+/*
+==================================================
+Move InService -> Finished
+==================================================
+*/
 
+void Restaurant::moveInServiceToFinished(int timestep)
+{
+    while (!inService.isEmpty())
+    {
+        Order* o = inService.peek();
+
+        if (o->getFinishServiceTime() > timestep)
+            break;
+
+        inService.dequeue();
+
+        o->setTF(timestep);
+        o->setStatus(FINISHED_S);
+
+        if (o->isDineIn())
+        {
+            Table* t = o->getTable();
+
+            freeTables.enqueue(
+                t,
+                -t->getCapacity());
+        }
+        else if (o->isDelivery())
+        {
+            Scooter* s = o->getScooter();
+
+            int back =
+                timestep +
+                (o->getDistance() / s->getSpeed()) + 1;
+
+            s->setReturnTime(back);
+
+            backScooters.enqueue(s, -back);
+        }
+
+        finishedOrders.push(o);
+    }
+}
+
+/*
+==================================================
+Finish Orders
+==================================================
+*/
 void Restaurant::moveReadyToService(int timestep)
 {
     // Dine In Orders
@@ -463,53 +512,75 @@ void Restaurant::moveReadyToService(int timestep)
         finishedOrders.push(o);
     }
 }
-
-/*
-==================================================
-Finish Orders
-==================================================
-*/
-
-void Restaurant::moveInServiceToFinished(int timestep)
-{
-    while (!inService.isEmpty())
-    {
-        Order* o = inService.peek();
-
-        if (o->getFinishServiceTime() > timestep)
-            break;
-
-        inService.dequeue();
-
-        o->setTF(timestep);
-        o->setStatus(FINISHED_S);
-
-        if (o->isDineIn())
-        {
-            Table* t = o->getTable();
-
-            freeTables.enqueue(
-                t,
-                -t->getCapacity());
-        }
-        else if (o->isDelivery())
-        {
-            Scooter* s = o->getScooter();
-
-            int backTime =
-                timestep +
-                (o->getDistance() / s->getSpeed()) + 1;
-
-            s->setReturnTime(backTime);
-
-            backScooters.enqueue(
-                s,
-                -backTime);
-        }
-
-        finishedOrders.push(o);
-    }
-}
+//void Restaurant::moveReadyToService(int timestep)
+//{
+//    // Dine In Orders
+//    while (!readyOD.isEmpty())
+//    {
+//        Order* o = readyOD.peek();
+//        Table* t = nullptr;
+//
+//        // 1. Try a free table first (best fit)
+//        t = freeTables.getBest(o->getSeats());
+//
+//        // 2. If no free table fits, try a sharable busy table
+//        if (!t && o->getCanShare())
+//            t = busy_sharable.getBest(o->getSeats());
+//
+//        // 3. No fit at all, stop trying for now
+//        if (!t)
+//            break;
+//
+//        readyOD.dequeue();
+//        o->setTable(t);
+//        o->setTableID(t->getID());
+//        t->reserveSeats(
+//            o->getSeats(),
+//            o->getDuration(),
+//            timestep,
+//            o->getCanShare());
+//        o->setTS(timestep);
+//        o->setStatus(INSERVICE);
+//        int finish = timestep + o->getDuration();
+//        o->setFinishServiceTime(finish);
+//        inService.enqueue(o, -finish);
+//
+//        // 4. Re-enqueue the table into the correct busy list
+//        if (t->getFreeSeats() > 0 && t->isSharable())
+//            busy_sharable.enqueue(t, t->getFreeSeats());
+//        else if (t->getFreeSeats() > 0 && !t->isSharable())
+//            busy_noshare.enqueue(t, t->getFreeSeats());
+//        // if no free seats left, table stays out of all lists until it frees up
+//    }
+//
+//    // Delivery Orders (unchanged)
+//    while (!readyOV.isEmpty() && !freeScooters.isEmpty())
+//    {
+//        Order* o = readyOV.dequeue();
+//        Scooter* s = freeScooters.dequeue();
+//        o->setScooter(s);
+//        o->setScooterID(s->getID());
+//        o->setTS(timestep);
+//        o->setStatus(INSERVICE);
+//        int finish =
+//            timestep +
+//            (o->getDistance() / s->getSpeed()) + 1;
+//        o->setFinishServiceTime(finish);
+//        s->incrementOrders();
+//        s->addDistance(o->getDistance());
+//        inService.enqueue(o, -finish);
+//    }
+//
+//    // Takeaway Orders (unchanged)
+//    while (!readyOT.isEmpty())
+//    {
+//        Order* o = readyOT.dequeue();
+//        o->setTS(timestep);
+//        o->setTF(timestep + 1);
+//        o->setStatus(FINISHED_S);
+//        finishedOrders.push(o);
+//    }
+//}
 /*
 ==================================================
 Scooters / Tables
@@ -580,7 +651,28 @@ void Restaurant::randomSimulate()
 
         updateScooters(timestep);
 
-        updateTables(timestep);  
+        updateTables(timestep);
+
+        if (!pendOVC.isEmpty() && rand() % 5 == 0)
+            Cancel_Order(pendOVC.getRandomID());
+
+        if (!readyOV.isEmpty() && rand() % 8 == 0) {
+            Order* f = readyOV.CancelAndReturn(readyOV.getRandomID());
+            if (f) cancelledOrders.enqueue(f);
+        }
+
+        if (!cooking.isEmpty() && rand() % 10 == 0) {
+            Order* f = cooking.CancelAndReturn(cooking.getRandomID());
+            if (f) {
+                Chef* c = f->getChef();
+                if (c) {
+                    c->setBusy(false);
+                    if (c->getType() == "CS") freeCS.enqueue(c);
+                    else                       freeCN.enqueue(c);
+                }
+                cancelledOrders.enqueue(f);
+            }
+        }
 
         ui.printTimestep(
             timestep,
@@ -619,6 +711,4 @@ void Restaurant::randomSimulate()
         cin.get();
         timestep++;
     }
-
-    cout << "\nSimulation Finished\n";
 }

@@ -66,6 +66,10 @@ private:
 
     // Tables
     Fit_Tables freeTables;
+    Fit_Tables busy;
+    Fit_Tables busy_sharable;
+    Fit_Tables busy_noshare;
+
 
     // Results
     Stack<Order*> finishedOrders;

@@ -59,3 +59,4 @@ void Request_Action::Act(Restaurant* pRest)
     }
     pRest->AddOrder(pOrder); //    <<--- AddOrder should be made in the restaurant class
 }
+

@@ -229,7 +229,7 @@ public:
                     o = new Order(i, OVG, tq, size, price, dist);
 			}
           
-			cout << "Generated Order: " << t << endl;
+			
 			// add to requesrt action list (for interactive mode, this would be read from input file instead)
 			
             // push to correct pending list
@@ -251,16 +251,12 @@ public:
         CS_count = 15; CN_count = 20;
         CS_speed = 3.0; CN_speed = 2.0;
         scooter_count = 5; table_count = 7;
-		cout << "Restaurant Simulation Started (Random Mode)\n";
+		
 
         loadChefs();
-        cout << "Restaurant Simulation Started (Random Mode) 2 \n";
         loadScooters();
-        cout << "Restaurant Simulation Started (Random Mode)3 \n";
         loadTables();
-        cout << "Restaurant Simulation Started (Random Mode)4 \n";
         generateRandomOrders();
-        cout << "Restaurant Simulation Started (Random Mode) 5 \n";
         /*ui.readMode(interactiveMode);*/
 
         int timestep = 0;
@@ -318,13 +314,11 @@ public:
 
                 c->setBusy(true);
 
-                cout<<"cooking "<<endl;
-                    COOKING.getCount();
-					cout << "chef " << c << endl;
+               
                 // NOTE: in phase 2 we track which chef got which order
             }
 
-            cout << "3.11\n";
+            
 
            
             // ── STEP 3.2: cooking → ready (75% chance, up to 15 times) ──
@@ -348,7 +342,7 @@ public:
                 }
             }
 
-            cout << "3.2\n";
+         
 
             // ── STEP 3.3: ready → inservice (up to 10 times) ──
             for (int i = 0; i < 10 && !readyEmpty(); i++) {
@@ -385,7 +379,6 @@ public:
                 }
             }
 
-            cout << "3.3\n";
 
 
 
@@ -394,21 +387,17 @@ public:
             cout << "Attempting to cancel order with ID: " << cancelID << endl; 
             PEND_OVC.print();
             PEND_OVC.CancelOrder(cancelID);*/
-               
-            
-
+                      
             cout << "3.4 not complete \n";
 
             // ── STEP 3.5: cancel random OV from RDY_OV ──
             RDY_OV_LIST.CancelOrder(rand() % 1000);
 			// put cancelled order in CANCELLED list (not implemented in RDY_OV for simplicity)
 			
-            cout << "3.5\n";
 
             // ── STEP 3.6: cancel random OV from COOKING ──
             COOKING.CancelOrder(rand() % 1000);
 
-                        cout << "3.6\n";
 
             // ── STEP 3.7: inservice → finished (25% chance) ──
             if ((rand() % 100) < 25 && !INSERVICE.isEmpty()) {
@@ -428,7 +417,6 @@ public:
                 FINISHED.push(o);
             }
 
-                        cout << "3.7\n";
 
             // ── STEP 3.8: scooter back → free or maintenance (50%) ──
             if ((rand() % 100) < 50 && !BACK_SCOOTERS.isEmpty()) {
@@ -443,7 +431,6 @@ public:
                 }
             }
 
-                                    cout << "3.8\n";
 
             // ── STEP 3.9: maintenance → free (50%) ──
             if ((rand() % 100) < 50 && !MAINT_SCOOTERS.isEmpty()) {
@@ -451,7 +438,6 @@ public:
                 FREE_SCOOTERS.enqueue(s, (int)s->getDistanceCut());
             }
 
-                                                cout << "3.9\n";
 
             // ── STEP 3.10: print current state ──
             ui.printTimestep(timestep, RACTIONS_LIST, CACTIONS_LIST, PEND_ODG, PEND_ODN, PEND_OT,
@@ -462,7 +448,6 @@ public:
                 MAINT_SCOOTERS, BACK_SCOOTERS,
                 FINISHED, CANCELLED);
 
-			cout << "3.10\n";
 
             // interactive mode: wait for user keypress
            /* if (interactiveMode) {

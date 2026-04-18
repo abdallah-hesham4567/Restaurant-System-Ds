@@ -10,8 +10,6 @@ using namespace std;
 #include "Cook_Ords.h"
 #include "RDY_OV.h"
 #include "Fit_Tables.h"
-
-// Entity classes
 #include "Order.h"
 #include "Chef.h"
 #include "Scooter.h"
@@ -19,14 +17,53 @@ using namespace std;
 #include "Request_Action.h"
 #include "Cancel_Action.h"
 
-// UI.h
 class UI {
 public:
-    // ── reads ──────────────────────────────
-    //void readMode(bool& interactive);          // ask user: interactive or silent
-    //void readFileNames(string& in, string& out); // ask for input/output file names
 
-    // ── print ──────────────────────────────
+    // ── each section has its own print function ──
+
+    void printActions(
+        LinkedQueue<Request_Action*>& Ractions,
+        LinkedQueue<Cancel_Action*>& Cactions
+    );
+
+    void printPendingOrders(
+        LinkedQueue<Order*>& pendODG,
+        LinkedQueue<Order*>& pendODN,
+        LinkedQueue<Order*>& pendOT,
+        LinkedQueue<Order*>& pendOVN,
+        Pend_OVC& pendOVC,
+        PriQueue<Order*>& pendOVG
+    );
+
+    void printAvailableChefs(
+        LinkedQueue<Chef*>& freeCS,
+        LinkedQueue<Chef*>& freeCN
+    );
+
+    void printCookingOrders(Cook_Ords& cooking);
+
+    void printReadyOrders(
+        LinkedQueue<Order*>& rdyOT,
+        RDY_OV& rdyOV,
+        LinkedQueue<Order*>& rdyOD
+    );
+
+    void printAvailableScooters(PriQueue<Scooter*>& freeScooters);
+
+    void printAvailableTables(Fit_Tables& freeTables);
+
+    void printInService(PriQueue<Order*>& inService);
+
+    void printMaintenanceScooters(LinkedQueue<Scooter*>& maintScooters);
+
+    void printBackScooters(PriQueue<Scooter*>& backScooters);
+
+    void printCancelledOrders(LinkedQueue<Order*>& cancelled);
+
+    void printFinishedOrders(Stack<Order*>& finished);
+
+    // ── master print: calls all above in order ──
     void printTimestep(
         int timestep,
         LinkedQueue<Request_Action*>& Ractions,

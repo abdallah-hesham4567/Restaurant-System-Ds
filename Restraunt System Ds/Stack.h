@@ -35,4 +35,15 @@ public:
         while (cur) { cout << cur->item << " "; cur = cur->next; }
         cout << endl;
     }
+
+    void printIDs() {
+        Node<T>* cur = top;
+        if (!cur) { cout << "Empty\n"; return; }
+        while (cur) {
+            cout << cur->item->getID() << " ";
+            cur = cur->next;
+        }
+        cout << endl;
+	}
+
 };

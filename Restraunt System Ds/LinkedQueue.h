@@ -49,4 +49,15 @@ public:
 
         cout << endl;
     }
+
+    void printIDs() {
+        Node<T>* cur = front;
+        if (!cur) { cout << "Empty\n"; return; }
+        while (cur) {
+            cout << cur->item->getID() << " ";
+            cur = cur->next;
+        }
+        cout << endl;
+    }
+	Node<T>* getFront() { return front; }
 };

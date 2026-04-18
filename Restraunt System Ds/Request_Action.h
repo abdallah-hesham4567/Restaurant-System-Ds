@@ -7,8 +7,7 @@ class Restaurant;
 class Request_Action  :  public Action
 {   
     private:
-    ORD_TYPE Order_Type;
-    int ID;
+    
     int Size;
     double Price;
 
@@ -27,5 +26,6 @@ class Request_Action  :  public Action
     bool SetOD(int num, double dur, bool CS);
     bool SetOV(int d);
     virtual void Act(Restaurant* pRest);
+
 };
 

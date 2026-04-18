@@ -3,13 +3,13 @@
 
 Cancel_Action::Cancel_Action(ORD_TYPE ot, int t, int id) : Action(t)
 {
-    order_type = ot;
+    Order_Type = ot;
     ID = id;
 }
 
 void Cancel_Action::Act(Restaurant* pRest)
 {
-    if (order_type == ORD_TYPE::OVC)
+    if (Order_Type == ORD_TYPE::OVC)
     {
         pRest->Cancel_Order(ID);
     }
@@ -18,3 +18,4 @@ void Cancel_Action::Act(Restaurant* pRest)
         //unable to delete order
     }
 }
+

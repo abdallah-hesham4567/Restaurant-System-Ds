@@ -40,4 +40,16 @@ public:
         count--;
         return t;
     }
+
+    void printIDs() {
+        Node<Table*>* cur = head;
+        if (!cur) { cout << "Empty\n"; return; }
+        while (cur) {
+            Table* t = cur->item;
+            cout << "[T" << t->getID() << ", " << t->getCapacity()
+                << ", " << t->getFreeSeats() << "] ";
+            cur = cur->next;
+        }
+        cout << endl;
+	}
 };

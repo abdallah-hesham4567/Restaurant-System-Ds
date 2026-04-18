@@ -15,7 +15,7 @@ public:
     Table(int id, int cap);
        
 
-    int  getID(); 
+    int getID() { return ID; }
     int  getCapacity();
     int  getFreeSeats();
     bool isSharable();

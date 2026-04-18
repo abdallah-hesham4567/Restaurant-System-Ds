@@ -1,4 +1,5 @@
 #pragma once
+#include "Chef.h"
 #include <iostream>
 using namespace std;
 
@@ -13,7 +14,7 @@ private:
     int ID;
     ORD_TYPE type;
     ORD_STATUS status;
-
+    Chef* assignedChef = nullptr;
     int TQ, TA, TR, TS, TF;
     int size;
     double price;
@@ -84,6 +85,8 @@ public:
     bool isVIP(); // OVG
 
     double getPriority(); // for OVG
+    void setChef(Chef* c) { assignedChef = c; }
+    Chef* getChef() { return assignedChef; }
 
     // Output
     friend ostream& operator<<(ostream& out, Order* o);

@@ -309,8 +309,11 @@ public:
 
                 // assign order to chef and move to cooking
 
+
                 o->setTA(timestep);
-                // priority in cooking = cook time = ceil(size / chefSpeed)
+                o->setChef(c);          // ← link chef to order
+                c->setBusy(true);
+
                 int cookTime = (int)ceil(o->getSize() / c->getSpeed());
                 COOKING.enqueue(o, cookTime);
 
@@ -331,6 +334,17 @@ public:
                 if ((rand() % 100) < 75) {
                     Order* o = COOKING.dequeue();
                     o->setTR(timestep);
+
+                    // ← return chef to correct free list
+                    Chef* c = o->getChef();
+                    if (c) {
+                        c->setBusy(false);
+                        if (c->getType() == "CS")
+                            FREE_CS.enqueue(c);
+                        else
+                            FREE_CN.enqueue(c);
+                    }
+
                     moveToReady(o);
                 }
             }

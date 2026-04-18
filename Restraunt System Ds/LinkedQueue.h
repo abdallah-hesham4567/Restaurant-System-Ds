@@ -1,5 +1,7 @@
 #pragma once
 #include "Node.h"
+#include <iostream>
+using namespace std;
 
 template <class T>
 class LinkedQueue {
@@ -39,6 +41,7 @@ public:
 
     void print() {
         Node<T>* cur = front;
+		if (!cur) { cout << "Empty\n"; return; }
         while (cur) { 
         cout << cur->item << " "; 
         cur = cur->next; 

@@ -3,7 +3,7 @@
 using namespace std;
 
 
-enum ORD_TYPE { OD, ODG, ODN, OT, OV, OVC, OVG, OVN };
+enum ORD_TYPE {  ODG, ODN, OT,  OVC, OVG, OVN };
 enum ORD_STATUS { PENDING, COOKING, READY, SERV, DONE };
 
 class Order

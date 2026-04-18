@@ -1,4 +1,5 @@
 ﻿#pragma once
+
 #include "LinkedQueue.h"
 #include "Pri_Queue.h"
 #include "Stack.h"
@@ -10,7 +11,6 @@
 #include "Chef.h"
 #include "Scooter.h"
 #include "Table.h"
-#include "Action.h"
 #include "UI.h"
 #include <fstream>
 #include <string>
@@ -20,8 +20,9 @@ class Restaurant {
 private:
     // ── 22 LISTS ──────────────────────────────────────
 
-    // (1) Actions
-    LinkedQueue<Action*>   ACTIONS_LIST;
+    // (2) Actions
+    LinkedQueue<Request_Action*>   RACTIONS_LIST;
+    LinkedQueue<Cancel_Action*>    CACTIONS_LIST;
 
     // (6) Pending orders
     LinkedQueue<Order*>    PEND_ODG;   // dine-in group
@@ -83,7 +84,7 @@ private:
             COOKING.isEmpty() &&
             RDY_OT.isEmpty() && RDY_OV_LIST.isEmpty() && RDY_OD.isEmpty() &&
             INSERVICE.isEmpty() &&
-            ACTIONS_LIST.isEmpty();
+            RACTIONS_LIST.isEmpty() &&  CACTIONS_LIST.isEmpty() ;
     }
 
     bool pendingEmpty() {
@@ -119,6 +120,7 @@ private:
         return (t == ODG || t == ODN);
     }
 
+   
 public:
     // ── CONSTRUCTORS ─────────────────────────────────
     Restaurant() : CS_count(0), CN_count(0),
@@ -128,8 +130,7 @@ public:
     }
     //Helpers
     void AddOrder(Order* ord);
-    bool CancelOrder(int id);
-
+    void Cancel_Order(int id);
 
 
 
@@ -181,60 +182,101 @@ public:
 
     void generateRandomOrders() {
         // generate 500+ random orders into pending lists
-        int types[] = { ODG, ODN, OT, OVN, OVC, OVG };
-        for (int i = 1; i <= 500; i++) {
-            ORD_TYPE t = (ORD_TYPE)(types[rand() % 6]);
+        ORD_TYPE types[] = { ODG, ODN, OT, OVN, OVC, OVG };
+        for (int i = 1; i <= 100; i++) {
+            int t = rand() % 6;
             int  tq = rand() % 100 + 1;
             int  size = rand() % 10 + 1;
             double price = (rand() % 200 + 50) * 1.0;
 
             Order* o = nullptr;
 
-            if (t == ODG || t == ODN) {
+    //        if (t == ODG || t == ODN) {
+    //            int seats = rand() % 6 + 2;         // 2-8 seats
+    //            int dur = rand() % 20 + 5;         // 5-25 timesteps
+    //            bool share = (rand() % 2 == 0);
+    //            Order* o = new Order(i, t, tq, size, price, seats, dur, share);
+    //        }
+
+    //        else if (t == OVG || t == OVN || t == OVC) {
+    //            double dist = (rand() % 50 + 5) * 1.0;
+    //            Order* o = new Order(i, t, tq, size, price, dist);
+    //        }
+    //        else
+				//Order* o = new Order(i, t, tq, size, price);
+
+            if(t==0||t==1)
+            {
                 int seats = rand() % 6 + 2;         // 2-8 seats
                 int dur = rand() % 20 + 5;         // 5-25 timesteps
                 bool share = (rand() % 2 == 0);
-                Order* o = new Order(i, t, tq, size, price, seats, dur, share);
+
+              t==0?  o = new Order(i, ODG, tq, size, price, seats, dur, share) : o = new Order(i, ODN, tq, size, price, seats, dur, share);
             }
 
-            else if (t == OVG || t == OVN || t == OVC) {
+            else if(t==2)
+            {
+                o = new Order(i, OT, tq, size, price);
+            }
+            else if(t==3||t==4||t==5)
+            {
                 double dist = (rand() % 50 + 5) * 1.0;
-                Order* o = new Order(i, t, tq, size, price, dist);
-            }
-            else
-				Order* o = new Order(i, t, tq, size, price);
-
+                if(t==3)
+                    o = new Order(i, OVN, tq, size, price, dist);
+                else if(t==4)
+                    o = new Order(i, OVC, tq, size, price, dist);
+                else
+                    o = new Order(i, OVG, tq, size, price, dist);
+			}
+          
+			cout << "Generated Order: " << t << endl;
+			// add to requesrt action list (for interactive mode, this would be read from input file instead)
+			
             // push to correct pending list
             switch (t) {
-            case ODG: PEND_ODG.enqueue(o);              break;
-            case ODN: PEND_ODN.enqueue(o);              break;
-            case OT:  PEND_OT.enqueue (o);               break;
-            case OVN: PEND_OVN.enqueue(o);              break;
-            case OVC: PEND_OVC.enqueue(o);              break;
-            case OVG: PEND_OVG.enqueue(o, (int)price);  break;
+            case 0: PEND_ODG.enqueue(o);              break;
+            case 1: PEND_ODN.enqueue(o);              break;
+            case 2:  PEND_OT.enqueue (o);               break;
+            case 3: PEND_OVN.enqueue(o);              break;
+            case 4: PEND_OVC.enqueue(o);              break;
+            case 5: PEND_OVG.enqueue(o, (int)price);  break;
             }
         }
+		// print elements of each pending list
+		
+       
     }
-
-    // ── PHASE 1.2: RANDOM SIMULATE ───────────────────
 
     void randomSimulate() {
         // setup resources (hardcoded for phase 1.2)
         CS_count = 15; CN_count = 20;
         CS_speed = 3.0; CN_speed = 2.0;
         scooter_count = 5; table_count = 7;
+		cout << "Restaurant Simulation Started (Random Mode)\n";
 
         loadChefs();
+        cout << "Restaurant Simulation Started (Random Mode) 2 \n";
         loadScooters();
+        cout << "Restaurant Simulation Started (Random Mode)3 \n";
         loadTables();
+        cout << "Restaurant Simulation Started (Random Mode)4 \n";
         generateRandomOrders();
-
-        ui.readMode(interactiveMode);
+        cout << "Restaurant Simulation Started (Random Mode) 5 \n";
+        /*ui.readMode(interactiveMode);*/
 
         int timestep = 0;
 
         while (!allDone()) {
             timestep++;
+            if(timestep==10)
+				break;
+            ui.printTimestep(timestep, RACTIONS_LIST, CACTIONS_LIST, PEND_ODG, PEND_ODN, PEND_OT,
+                PEND_OVN, PEND_OVC, PEND_OVG,
+                FREE_CS, FREE_CN, COOKING,
+                RDY_OT, RDY_OV_LIST, RDY_OD,
+                FREE_SCOOTERS, FREE_TABLES, INSERVICE,
+                MAINT_SCOOTERS, BACK_SCOOTERS,
+                FINISHED, CANCELLED);
 
             // ── STEP 3.1: assign pending → cooking (up to 30 times) ──
             for (int i = 0; i < 30 && !pendingEmpty() &&
@@ -251,24 +293,38 @@ public:
                 else if (pick == 5 && !PEND_OVG.isEmpty()) o = PEND_OVG.dequeue();
                 if (!o) continue;
 
+               
+
+
                 // pick random chef (CS or CN)
-               /* Chef* c = nullptr;
+                Chef* c = nullptr;
                 if (!FREE_CS.isEmpty() && !FREE_CN.isEmpty())
                     c = (rand() % 2 == 0) ? FREE_CS.dequeue() : FREE_CN.dequeue();
                 else if (!FREE_CS.isEmpty()) c = FREE_CS.dequeue();
-                else if (!FREE_CN.isEmpty()) c = FREE_CN.dequeue();*/
-                   
-				
+                else if (!FREE_CN.isEmpty()) c = FREE_CN.dequeue();
 
+                // there is no need to check if c is null because of the loop condition
+
+
+
+                // assign order to chef and move to cooking
 
                 o->setTA(timestep);
                 // priority in cooking = cook time = ceil(size / chefSpeed)
                 int cookTime = (int)ceil(o->getSize() / c->getSpeed());
                 COOKING.enqueue(o, cookTime);
+
                 c->setBusy(true);
+
+                cout<<"cooking "<<endl;
+                    COOKING.getCount();
+					cout << "chef " << c << endl;
                 // NOTE: in phase 2 we track which chef got which order
             }
 
+            cout << "3.11\n";
+
+           
             // ── STEP 3.2: cooking → ready (75% chance, up to 15 times) ──
             for (int i = 0; i < 15; i++) {
                 if (COOKING.isEmpty()) break;
@@ -278,6 +334,8 @@ public:
                     moveToReady(o);
                 }
             }
+
+            cout << "3.2\n";
 
             // ── STEP 3.3: ready → inservice (up to 10 times) ──
             for (int i = 0; i < 10 && !readyEmpty(); i++) {
@@ -314,21 +372,30 @@ public:
                 }
             }
 
-            // ── STEP 3.4: cancel random OVC from PEND_OVC ──
-            int cancelID = rand() % 1000;
-             //////////////    abdallah hesham doesnot make yet 
+            cout << "3.3\n";
 
-            if (PEND_OVC.CancelOrder(cancelID)) {
-                // find the order and add to CANCELLED
-                // (simplified for phase 1.2)
-            }
+
+
+            // ── STEP 3.4: cancel random OVC from PEND_OVC ──
+          /*  int cancelID = rand() % 1000;
+            cout << "Attempting to cancel order with ID: " << cancelID << endl; 
+            PEND_OVC.print();
+            PEND_OVC.CancelOrder(cancelID);*/
+               
+            
+
+            cout << "3.4 not complete \n";
 
             // ── STEP 3.5: cancel random OV from RDY_OV ──
             RDY_OV_LIST.CancelOrder(rand() % 1000);
-
+			// put cancelled order in CANCELLED list (not implemented in RDY_OV for simplicity)
+			
+            cout << "3.5\n";
 
             // ── STEP 3.6: cancel random OV from COOKING ──
             COOKING.CancelOrder(rand() % 1000);
+
+                        cout << "3.6\n";
 
             // ── STEP 3.7: inservice → finished (25% chance) ──
             if ((rand() % 100) < 25 && !INSERVICE.isEmpty()) {
@@ -348,6 +415,8 @@ public:
                 FINISHED.push(o);
             }
 
+                        cout << "3.7\n";
+
             // ── STEP 3.8: scooter back → free or maintenance (50%) ──
             if ((rand() % 100) < 50 && !BACK_SCOOTERS.isEmpty()) {
                 Scooter* s = BACK_SCOOTERS.dequeue();
@@ -361,15 +430,18 @@ public:
                 }
             }
 
+                                    cout << "3.8\n";
+
             // ── STEP 3.9: maintenance → free (50%) ──
             if ((rand() % 100) < 50 && !MAINT_SCOOTERS.isEmpty()) {
                 Scooter* s = MAINT_SCOOTERS.dequeue();
                 FREE_SCOOTERS.enqueue(s, (int)s->getDistanceCut());
             }
 
+                                                cout << "3.9\n";
+
             // ── STEP 3.10: print current state ──
-            ui.printTimestep(timestep,
-                ACTIONS_LIST, PEND_ODG, PEND_ODN, PEND_OT,
+            ui.printTimestep(timestep, RACTIONS_LIST, CACTIONS_LIST, PEND_ODG, PEND_ODN, PEND_OT,
                 PEND_OVN, PEND_OVC, PEND_OVG,
                 FREE_CS, FREE_CN, COOKING,
                 RDY_OT, RDY_OV_LIST, RDY_OD,
@@ -377,19 +449,20 @@ public:
                 MAINT_SCOOTERS, BACK_SCOOTERS,
                 FINISHED, CANCELLED);
 
+			cout << "3.10\n";
+
             // interactive mode: wait for user keypress
-            if (interactiveMode) {
+           /* if (interactiveMode) {
                 cout << "\nPress ENTER to move to next timestep...\n";
                 cin.ignore();
                 cin.get();
-            }
+            }*/
         }
 
         cout << "\n=== SIMULATION DONE at timestep " << timestep << " ===\n";
-       
-    }
 
-   
+    }
+ 
 };
 
 

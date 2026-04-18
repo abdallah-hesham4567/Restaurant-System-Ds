@@ -16,18 +16,21 @@ using namespace std;
 #include "Chef.h"
 #include "Scooter.h"
 #include "Table.h"
+#include "Request_Action.h"
+#include "Cancel_Action.h"
 
 // UI.h
 class UI {
 public:
     // ── reads ──────────────────────────────
-    void readMode(bool& interactive);          // ask user: interactive or silent
-    void readFileNames(string& in, string& out); // ask for input/output file names
+    //void readMode(bool& interactive);          // ask user: interactive or silent
+    //void readFileNames(string& in, string& out); // ask for input/output file names
 
     // ── print ──────────────────────────────
     void printTimestep(
         int timestep,
-        LinkedQueue<Action*>& actions,
+        LinkedQueue<Request_Action*>& Ractions,
+        LinkedQueue<Cancel_Action*>& Cactions,
         LinkedQueue<Order*>& pendODG,
         LinkedQueue<Order*>& pendODN,
         LinkedQueue<Order*>& pendOT,

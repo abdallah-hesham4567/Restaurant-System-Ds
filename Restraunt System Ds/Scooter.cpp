@@ -1,5 +1,5 @@
 #include "Scooter.h"
-using namespace std;
+
 
 
 Scooter::Scooter(int id, double sp, int mOrd, int mDur)
@@ -57,8 +57,8 @@ void  Scooter::resetOrdCount()
 }
 
 
-ostream& operator<<(ostream& out, Scooter* s) {
-       out << "[S" << s->ID << "]";
+ ostream& operator << (ostream& out, Scooter* s) {
+       out << "[S" << s->getID() << "]";
        return out;
    }
 

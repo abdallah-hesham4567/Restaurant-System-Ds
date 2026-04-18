@@ -10,8 +10,8 @@ private:
     string type;
     bool busy;
     int busyTime;
-    static int CS_speed;
-    static int CN_speed;
+     int CS_speed;
+    int CN_speed;
 
 public:
     

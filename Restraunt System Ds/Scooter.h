@@ -1,6 +1,6 @@
 #pragma once
-// Classes/Scooter.h
-#include <iostream>
+#include <ostream>
+using namespace std;
 class Scooter {
 private:
     int    ID;

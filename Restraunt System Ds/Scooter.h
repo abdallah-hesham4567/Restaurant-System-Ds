@@ -11,7 +11,7 @@ private:
     int    ordCount;     // orders delivered so far
     double distanceCut;  // total distance covered
     int    mainEndTime;  // ← NEW: timestep when maintenance ends
-
+    int backTime;
 public:
     Scooter(int id, double sp, int mOrd, int mDur);
 
@@ -25,6 +25,9 @@ public:
     // new
     int    getMainEndTime();
     void   setMainEndTime(int t);
+
+    int getBackTime();
+    void setBackTime(int t);
 
     void   addDistance(double d);
     void   incrementOrders();

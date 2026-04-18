@@ -54,31 +54,53 @@ private:
     bool   interactiveMode;
 
     // ── INLINE HELPERS (too small for .cpp) ───────────
+   
     bool allDone() {
-        return PEND_ODG.isEmpty() && PEND_ODN.isEmpty() &&
-            PEND_OT.isEmpty() && PEND_OVN.isEmpty() &&
-            PEND_OVC.isEmpty() && PEND_OVG.isEmpty() &&
+        return PEND_ODG.isEmpty() &&
+            PEND_ODN.isEmpty() &&
+            PEND_OT.isEmpty() &&
+            PEND_OVN.isEmpty() &&
+            PEND_OVC.isEmpty() &&
+            PEND_OVG.isEmpty() &&
             COOKING.isEmpty() &&
-            RDY_OT.isEmpty() && RDY_OV_LIST.isEmpty() && RDY_OD.isEmpty() &&
+            RDY_OT.isEmpty() &&
+            RDY_OV_LIST.isEmpty() &&
+            RDY_OD.isEmpty() &&
             INSERVICE.isEmpty() &&
-            RACTIONS_LIST.isEmpty() && CACTIONS_LIST.isEmpty();
+            BACK_SCOOTERS.isEmpty() &&
+            MAINT_SCOOTERS.isEmpty() &&
+            RACTIONS_LIST.isEmpty() &&
+            CACTIONS_LIST.isEmpty();
     }
+
+
+
+
+
+
+
+
+
     bool pendingEmpty() {
         return PEND_ODG.isEmpty() && PEND_ODN.isEmpty() &&
             PEND_OT.isEmpty() && PEND_OVN.isEmpty() &&
             PEND_OVC.isEmpty() && PEND_OVG.isEmpty();
     }
+
     bool readyEmpty() {
         return RDY_OT.isEmpty() && RDY_OV_LIST.isEmpty() && RDY_OD.isEmpty();
     }
+
     bool isDelivery(Order* o) {
         ORD_TYPE t = o->getType();
         return (t == OVG || t == OVN || t == OVC);
     }
+
     bool isDineIn(Order* o) {
         ORD_TYPE t = o->getType();
         return (t == ODG || t == ODN);
     }
+
     void moveToReady(Order* o) {
         ORD_TYPE t = o->getType();
         if (t == OT)                          RDY_OT.enqueue(o);

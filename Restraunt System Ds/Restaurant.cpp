@@ -77,17 +77,12 @@ void Restaurant::loadTables() {
 }
 
 // ── FIX 1: generateRandomOrders ───────────────────────────────────────────────
-// BUG: int t = rand()%6 was used as ORD_TYPE index but passed to switch as int
-//      so all orders became ODG=0 (first enum value)
-// FIX: use explicit ORD_TYPE array and index into it
-
-
 
 void Restaurant::generateRandomOrders() {
     ORD_TYPE types[] = { ODG, ODN, OT, OVN, OVC, OVG }; // explicit enum array
     int orderID = 1;
 
-    for (int t = 1; t <= 100; t++) {
+    for (int t = 1; t <= 500; t++) {
         int count = rand() % 3 + 1;
         for (int j = 0; j < count; j++) {
             
@@ -224,9 +219,11 @@ void Restaurant::assignToService(int t) {
 
                 INSERVICE.enqueue(o, returnT);
                 // FIX: scooter goes to BACK with return time as priority
+                s->setBackTime(returnT);
                 BACK_SCOOTERS.enqueue(s, returnT);
             }
         }
+
         else { // dine-in
             Table* tbl = FREE_TABLES.getBest(o->getSeats());
             if (tbl) {
@@ -248,8 +245,6 @@ void Restaurant::assignToService(int t) {
 }
 
 // ── FIX 2: updateScooters — 3 stages every timestep ──────────────────────────
-// BUG: BACK_SCOOTERS was filled but never processed → scooters stuck forever
-// FIX: check BACK priority <= t → move to FREE or MAINT
 //      check MAINT mainEndTime <= t → move to FREE
 void Restaurant::updateScooters(int t) {
 
@@ -273,7 +268,7 @@ void Restaurant::updateScooters(int t) {
 
     // STAGE 2: scooters whose return time <= t → FREE or MAINTENANCE
     while (!BACK_SCOOTERS.isEmpty() &&
-        BACK_SCOOTERS.peek()->getMainEndTime() <= t) {
+        BACK_SCOOTERS.peek()->getBackTime() <= t) {
         Scooter* s = BACK_SCOOTERS.dequeue();
         s->incrementOrders();
         if (s->needsMaintenance()) {
@@ -317,18 +312,31 @@ void Restaurant::randomSimulate() {
 
         executeActions(timestep);
         assignToChefs(timestep);
-        updateCooking(timestep);
+        updateCooking(timestep);///
+
+        ui.printTimestep(timestep,
+            RACTIONS_LIST, CACTIONS_LIST,
+            PEND_ODG, PEND_ODN, PEND_OT, PEND_OVN, PEND_OVC, PEND_OVG,
+            FREE_CS, FREE_CN, COOKING,
+            RDY_OT, RDY_OV_LIST, RDY_OD,
+            FREE_SCOOTERS, FREE_TABLES, INSERVICE,
+            MAINT_SCOOTERS, BACK_SCOOTERS,
+            FINISHED, CANCELLED);
+        
+
+
+
         assignToService(timestep);
 
-        if (!PEND_OVC.isEmpty())
+        if (!PEND_OVC.isEmpty() && rand() % 5 == 0)
             Cancel_Order(PEND_OVC.getRandomID());
 
-        if (!RDY_OV_LIST.isEmpty()) {
+        if (!RDY_OV_LIST.isEmpty() && rand() % 8 == 0 ) {
             Order* f = RDY_OV_LIST.CancelAndReturn(RDY_OV_LIST.getRandomID());
             if (f) CANCELLED.enqueue(f);
         }
 
-        if (!COOKING.isEmpty()) {
+        if (!COOKING.isEmpty() && rand() % 10 == 0) {
             Order* f = COOKING.CancelAndReturn(COOKING.getRandomID());
             if (f) {
                 Chef* c = f->getChef();
@@ -344,14 +352,14 @@ void Restaurant::randomSimulate() {
         updateScooters(timestep);
         updateTables(timestep);
 
-        ui.printTimestep(timestep,
+       /* ui.printTimestep(timestep,
             RACTIONS_LIST, CACTIONS_LIST,
             PEND_ODG, PEND_ODN, PEND_OT, PEND_OVN, PEND_OVC, PEND_OVG,
             FREE_CS, FREE_CN, COOKING,
             RDY_OT, RDY_OV_LIST, RDY_OD,
             FREE_SCOOTERS, FREE_TABLES, INSERVICE,
             MAINT_SCOOTERS, BACK_SCOOTERS,
-            FINISHED, CANCELLED);
+            FINISHED, CANCELLED);*/
 
         if (interactiveMode) { cout << "Press ENTER...\n"; cin.get(); }
     }

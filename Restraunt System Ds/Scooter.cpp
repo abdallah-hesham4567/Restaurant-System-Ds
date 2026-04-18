@@ -16,6 +16,10 @@ double Scooter::getDistanceCut() { return distanceCut; }
 int  Scooter::getMainEndTime() { return mainEndTime; }
 void Scooter::setMainEndTime(int t) { mainEndTime = t; }
 
+int Scooter::getBackTime() { return backTime; }
+void Scooter::setBackTime(int t) { backTime = t; }
+
+
 void Scooter::addDistance(double d) { distanceCut += d; }
 void Scooter::incrementOrders() { ordCount++; }
 bool Scooter::needsMaintenance() { return ordCount >= mainOrd; }

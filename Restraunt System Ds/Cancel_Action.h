@@ -1,16 +1,14 @@
 #pragma once
 #include "Action.h"
-#include "Order.h"
+
 class Restaurant;
 
+// Cancels OVC orders only
 class Cancel_Action : public Action
 {
-   
+public:
 
-    public:
+    Cancel_Action(int time, int id);
 
-    Cancel_Action(ORD_TYPE ot, int t, int id);
-	Cancel_Action(int t, int id);
-    virtual void Act(Restaurant* pRest);
+    void Act(Restaurant* pRest) override;
 };
-

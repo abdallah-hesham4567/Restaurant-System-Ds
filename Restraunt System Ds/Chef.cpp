@@ -1,47 +1,36 @@
 #include "Chef.h"
-#include "Scooter.h"
 
-Chef::Chef(int id, string t, int speed)
+Chef::Chef(int chefID, string chefType, int chefSpeed)
 {
-    if (t == "CN")
-        setCNSpeed(speed);
-    else
-        setCSSpeed(speed);
-
-    ID = id;
-    type = t;
+    id = chefID;
+    type = chefType;
+    speed = chefSpeed;
     busy = false;
     busyTime = 0;
 }
 
-int Chef::getID() { return ID; }
-string Chef::getType() { return type; }
-bool Chef::getBusy() { return busy; }
-int Chef::getBusyTime() { return busyTime; }
+int Chef::getID() const { return id; }
 
-int Chef::getSpeed()
+string Chef::getType() const { return type; }
+
+bool Chef::isBusy() const { return busy; }
+
+int Chef::getBusyTime() const { return busyTime; }
+
+int Chef::getSpeed() const { return speed; }
+
+void Chef::setBusy(bool state)
 {
-    if (type == "CS")
-        return CS_speed;
-    else
-        return CN_speed;
+    busy = state;
 }
 
-void Chef::setBusy(bool b) { busy = b; }
-void Chef::setCSSpeed(int s) {
-	if (s > 0) CS_speed = s;
-	else CS_speed = 1; 
-}
-void Chef::setCNSpeed(int s) {
-    if (s > 0) CN_speed = s;
-    else CN_speed = 1; 
-}
-void Chef::addBusyTime(int t) { busyTime += t; }
-
-ostream& operator<<(ostream& out, Chef* c)
+void Chef::addBusyTime(int time)
 {
-    out << "[Chef" << c->ID
-        << " Type:" << c->type
-        << " Busy:" << (c->busy ? "Yes" : "No") << "]";
+    busyTime += time;
+}
+
+ostream& operator<<(ostream& out, Chef* chef)
+{
+    out << "[Chef " << chef->id << "]";
     return out;
 }

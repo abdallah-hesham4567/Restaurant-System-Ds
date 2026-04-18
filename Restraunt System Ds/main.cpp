@@ -1,11 +1,19 @@
 #include <iostream>
+#include <ctime>
+#include <cstdlib>
+
 #include "Restaurant.h"
-#include "UI.h"
 
 using namespace std;
 
-int main() {
-	Restaurant r;
-	r.randomSimulate();
-	return 0;
+int main()
+{
+    // Different random values each run
+    srand((unsigned)time(0));
+
+    Restaurant restaurant;
+
+    restaurant.randomSimulate();
+
+    return 0;
 }

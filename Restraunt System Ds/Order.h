@@ -1,112 +1,141 @@
 ﻿#pragma once
 #include <iostream>
+
 using namespace std;
 
-// forward declarations to avoid circular includes
 class Chef;
 class Scooter;
 class Table;
 
-enum ORD_TYPE { ODG, ODN, OT, OVC, OVG, OVN };
-enum ORD_STATUS { PENDING, COOKING, READY, INSERVICE, FINISHED_S, CANCELLED_S };
+enum ORD_TYPE
+{
+    ODG,
+    ODN,
+    OT,
+    OVC,
+    OVG,
+    OVN
+};
 
-class Order {
+enum ORD_STATUS
+{
+    PENDING,
+    COOKING,
+    READY,
+    INSERVICE,
+    FINISHED_S,
+    CANCELLED_S
+};
+
+// Represents one restaurant order
+class Order
+{
 private:
-    int        ID;
-    ORD_TYPE   type;
+    int id;
+    ORD_TYPE type;
     ORD_STATUS status;
 
-    // timestamps
-    int    TQ, TA, TR, TS, TF;
+    // Times
+    int TQ, TA, TR, TS, TF;
 
-    // common
-    int    size;
+    // Common data
+    int size;
     double price;
 
-    // dine-in only
-    int    seats;
-    double duration;
-    bool   canShare;
+    // Dine-in only
+    int seats;
+    int duration;
+    bool canShare;
 
-    // delivery only
-    int    distance;
+    // Delivery only
+    int distance;
 
-    // IDs (for output)
-    int    chefID, tableID, scooterID;
+    // Assigned resources
+    int chefID;
+    int scooterID;
+    int tableID;
 
-    // ── NEW: object pointers ──────────────────────
     Chef* chef;
     Scooter* scooter;
     Table* table;
 
-    // ── NEW: finish times ─────────────────────────
-    int    finishCookTime;     // TA + cookTime
-    int    finishServiceTime;  // TS + deliveryTime or duration
+    int finishCookTime;
+    int finishServiceTime;
 
 public:
-    // constructors
-    Order(int id, ORD_TYPE t, int tq, int s, double p);                            // OT
-    Order(int id, ORD_TYPE t, int tq, int s, double p, int st, double dur, bool share); // dine-in
-    Order(int id, ORD_TYPE t, int tq, int s, double p, int dist);                  // delivery
 
-    // getters — original
-    int        getID();
-    ORD_TYPE   getType();
-    ORD_STATUS getStatus();
-    int        getTQ();
-    int        getTA();
-    int        getTR();
-    int        getTS();
-    int        getTF();
-    int        getSize();
-    float      getPrice();
-    int        getChefID();
-    int        getSeats();
-    int        getDuration();
-    bool       getCanShare();
-    int        getTableID();
-    int        getDistance();
-    int        getScooterID();
+    // Constructors
+    Order(int ID, ORD_TYPE t, int tq, int sz, double pr);
+    Order(int ID, ORD_TYPE t, int tq, int sz, double pr,
+        int requiredSeats, int dur, bool share);
+    Order(int ID, ORD_TYPE t, int tq, int sz, double pr,
+        int dist);
 
-    // getters — new
-    Chef* getChef();
-    Scooter* getScooter();
-    Table* getTable();
-    int      getFinishCookTime();
-    int      getFinishServiceTime();
+    // Getters
+    int getID() const;
+    ORD_TYPE getType() const;
+    ORD_STATUS getStatus() const;
 
-    // setters — original
+    int getTQ() const;
+    int getTA() const;
+    int getTR() const;
+    int getTS() const;
+    int getTF() const;
+
+    int getSize() const;
+    double getPrice() const;
+
+    int getSeats() const;
+    int getDuration() const;
+    bool getCanShare() const;
+
+    int getDistance() const;
+
+    int getChefID() const;
+    int getScooterID() const;
+    int getTableID() const;
+
+    int getFinishCookTime() const;
+    int getFinishServiceTime() const;
+
+    Chef* getChef() const;
+    Scooter* getScooter() const;
+    Table* getTable() const;
+
+    // Setters
     void setStatus(ORD_STATUS s);
-    void setTA(int ta);
-    void setTR(int tr);
-    void setTS(int ts);
-    void setTF(int tf);
-    void setChefID(int id);
-    void setTableID(int id);
-    void setScooterID(int id);
 
-    // setters — new
+    void setTA(int time);
+    void setTR(int time);
+    void setTS(int time);
+    void setTF(int time);
+
+    void setChefID(int ID);
+    void setScooterID(int ID);
+    void setTableID(int ID);
+
+    void setFinishCookTime(int time);
+    void setFinishServiceTime(int time);
+
     void setChef(Chef* c);
     void setScooter(Scooter* s);
     void setTable(Table* t);
-    void setFinishCookTime(int t);
-    void setFinishServiceTime(int t);
 
-    // calculations
-    int getTi();
-    int getTC();
-    int getTW();
-    int getTserv();
+    // Helpers
+    bool isDineIn() const;
+    bool isDelivery() const;
+    bool isTakeaway() const;
+    bool isGrilled() const;
+    bool isVIP() const;
 
-    // helpers
-    bool isDineIn();
-    bool isDelivery();
-    bool isTakeaway();
-    bool isGrilled();
-    bool isVIP();
+    // Calculations
+    int getTi() const;
+    int getTC() const;
+    int getTW() const;
+    int getTserv() const;
 
-    // priority (OVG only)
-    double getPriority();
+    // Priority for OVG
+    double getPriority() const;
 
     friend ostream& operator<<(ostream& out, Order* o);
 };

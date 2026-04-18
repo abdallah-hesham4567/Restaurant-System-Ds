@@ -1,66 +1,127 @@
 #pragma once
+#include <iostream>
 #include "Node.h"
-template <class T>
-class PriQueue {
+
+using namespace std;
+
+template <typename T>
+class PriQueue
+{
 protected:
     Node<T>* head;
-    int      count;
-public:
-    PriQueue() : head(nullptr), count(0) {}
+    int count;
 
-    void enqueue(T item, int priority) {
-        Node<T>* n = new Node<T>(item, priority);     // insert in sorted position (highest priority first)
-        if (!head || priority > head->priority) {
-            n->next = head; head = n;
+public:
+
+    PriQueue()
+    {
+        head = nullptr;
+        count = 0;
+    }
+
+    ~PriQueue()
+    {
+        while (!isEmpty())
+            dequeue();
+    }
+
+    bool isEmpty() const
+    {
+        return count == 0;
+    }
+
+    int getCount() const
+    {
+        return count;
+    }
+
+    Node<T>* getFront() const
+    {
+        return head;
+    }
+
+    void enqueue(const T& item, int priority)
+    {
+        Node<T>* newNode = new Node<T>(item, priority);
+
+        if (!head || priority > head->priority)
+        {
+            newNode->next = head;
+            head = newNode;
         }
-        else {
-            Node<T>* cur = head;
-            while (cur->next && cur->next->priority >= priority) // cut to iterate 
-                cur = cur->next;
-            n->next = cur->next;
-            cur->next = n;
+        else
+        {
+            Node<T>* current = head;
+
+            while (current->next &&
+                current->next->priority >= priority)
+            {
+                current = current->next;
+            }
+
+            newNode->next = current->next;
+            current->next = newNode;
         }
+
         count++;
     }
 
-    T dequeue() {
-        Node<T>* tmp = head;
-        T item = tmp->item;
+    T dequeue()
+    {
+        if (isEmpty())
+            return T();
+
+        Node<T>* temp = head;
+        T item = temp->item;
+
         head = head->next;
-        delete tmp;
+
+        delete temp;
         count--;
+
         return item;
     }
 
-    T peek() { return head->item; }
+    T peek() const
+    {
+        if (isEmpty())
+            return T();
 
-    bool isEmpty() { return count == 0; }
-
-    int  getCount() { return count; }
-
-    void print() {
-        Node<T>* cur = head;
-        while (cur) { cout << cur->item << " "; cur = cur->next; }
-        cout << endl;
+        return head->item;
     }
 
-    void printIDs() {
-        Node<T>* cur = head;
-        if (!cur) { cout << "Empty\n"; return; }
-        while (cur) {
-            cout << cur->item->getID() << " ";
-            cur = cur->next;
+    void printIDs() const
+    {
+        Node<T>* current = head;
+
+        if (!current)
+        {
+            cout << "Empty";
+            return;
         }
-        cout << endl;
-	}
-	Node<T>* getFront() { return head; }
-    // add to PriQueue class:
-    int getRandomID() {
-        if (isEmpty()) return -1;
-        int step = rand() % count;
-        Node<T>* cur = head;
-        for (int i = 0; i < step; i++)
-            cur = cur->next;
-        return cur->item->getID();
+
+        while (current)
+        {
+            cout << current->item->getID();
+
+            if (current->next)
+                cout << ", ";
+
+            current = current->next;
+        }
+    }
+
+    int getRandomID() const
+    {
+        if (isEmpty())
+            return -1;
+
+        int steps = rand() % count;
+        Node<T>* current = head;
+
+        for (int i = 0; i < steps; i++)
+            current = current->next;
+
+        return current->item->getID();
     }
 };

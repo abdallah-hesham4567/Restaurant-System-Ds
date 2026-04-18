@@ -1,146 +1,142 @@
 ﻿#pragma once
 
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cmath>
+#include <cstdlib>
+#include <ctime>
+
+using namespace std;
+
 #include "LinkedQueue.h"
 #include "Pri_Queue.h"
 #include "Stack.h"
+
 #include "Pend_OVC.h"
 #include "Cook_Ords.h"
 #include "RDY_OV.h"
 #include "Fit_Tables.h"
+
 #include "Order.h"
 #include "Chef.h"
 #include "Scooter.h"
 #include "Table.h"
+
 #include "Request_Action.h"
 #include "Cancel_Action.h"
+
 #include "UI.h"
-#include <fstream>
-#include <string>
-#include <cmath>
-using namespace std;
 
-class Restaurant {
+class Restaurant
+{
 private:
-    // ── 22 LISTS ──────────────────────────────────────
-    LinkedQueue<Request_Action*>  RACTIONS_LIST;
-    LinkedQueue<Cancel_Action*>   CACTIONS_LIST;
-    LinkedQueue<Order*>   PEND_ODG;
-    LinkedQueue<Order*>   PEND_ODN;
-    LinkedQueue<Order*>   PEND_OT;
-    LinkedQueue<Order*>   PEND_OVN;
-    Pend_OVC              PEND_OVC;
-    PriQueue<Order*>      PEND_OVG;
-    LinkedQueue<Chef*>    FREE_CS;
-    LinkedQueue<Chef*>    FREE_CN;
-    Cook_Ords             COOKING;
-    LinkedQueue<Order*>   RDY_OT;
-    RDY_OV                RDY_OV_LIST;
-    LinkedQueue<Order*>   RDY_OD;
-    PriQueue<Order*>      INSERVICE;
-    PriQueue<Scooter*>    FREE_SCOOTERS;
-    PriQueue<Scooter*>    BACK_SCOOTERS;
-    LinkedQueue<Scooter*> MAINT_SCOOTERS;
-    Fit_Tables            FREE_TABLES;
-    Fit_Tables            BUSY_SHARABLE;
-    Fit_Tables            BUSY_NOSHARE;
-    Stack<Order*>         FINISHED;
-    LinkedQueue<Order*>   CANCELLED;
 
-    // ── CONFIG ────────────────────────────────────────
-    int    CS_count, CN_count;
-    double CS_speed, CN_speed;
-    int    scooter_count, table_count;
-    UI     ui;
-    bool   interactiveMode;
+    // Actions 
+    LinkedQueue<Request_Action*> requestList;
+    LinkedQueue<Cancel_Action*> cancelList;
 
-    // ── INLINE HELPERS (too small for .cpp) ───────────
-   
-    bool allDone() {
-        return PEND_ODG.isEmpty() &&
-            PEND_ODN.isEmpty() &&
-            PEND_OT.isEmpty() &&
-            PEND_OVN.isEmpty() &&
-            PEND_OVC.isEmpty() &&
-            PEND_OVG.isEmpty() &&
-            COOKING.isEmpty() &&
-            RDY_OT.isEmpty() &&
-            RDY_OV_LIST.isEmpty() &&
-            RDY_OD.isEmpty() &&
-            INSERVICE.isEmpty() &&
-            BACK_SCOOTERS.isEmpty() &&
-            MAINT_SCOOTERS.isEmpty() &&
-            RACTIONS_LIST.isEmpty() &&
-            CACTIONS_LIST.isEmpty();
-    }
+    // Pending Orders
+    LinkedQueue<Order*> pendODG;
+    LinkedQueue<Order*> pendODN;
+    LinkedQueue<Order*> pendOT;
+    LinkedQueue<Order*> pendOVN;
+    Pend_OVC pendOVC;
+    PriQueue<Order*> pendOVG;
 
+    // Free Chefs
+    LinkedQueue<Chef*> freeCS;
+    LinkedQueue<Chef*> freeCN;
 
+    // Cooking
+    Cook_Ords cooking;
 
+    // Ready
+    LinkedQueue<Order*> readyOT;
+    RDY_OV readyOV;
+    LinkedQueue<Order*> readyOD;
 
+    // In Service
+    PriQueue<Order*> inService;
 
+    // Scooters
+    PriQueue<Scooter*> freeScooters;
+    PriQueue<Scooter*> backScooters;
+    LinkedQueue<Scooter*> maintenanceScooters;
 
+    // Tables
+    Fit_Tables freeTables;
 
+    // Results
+    Stack<Order*> finishedOrders;
+    LinkedQueue<Order*> cancelledOrders;
 
+    // Config
+    int csCount, cnCount;
+    int csSpeed, cnSpeed;
+    int scooterCount, tableCount;
 
-    bool pendingEmpty() {
-        return PEND_ODG.isEmpty() && PEND_ODN.isEmpty() &&
-            PEND_OT.isEmpty() && PEND_OVN.isEmpty() &&
-            PEND_OVC.isEmpty() && PEND_OVG.isEmpty();
-    }
+    bool interactiveMode;
 
-    bool readyEmpty() {
-        return RDY_OT.isEmpty() && RDY_OV_LIST.isEmpty() && RDY_OD.isEmpty();
-    }
+    UI ui;
 
-    bool isDelivery(Order* o) {
-        ORD_TYPE t = o->getType();
-        return (t == OVG || t == OVN || t == OVC);
-    }
+    bool pendingEmpty();
+    bool readyEmpty();
+    bool allDone();
 
-    bool isDineIn(Order* o) {
-        ORD_TYPE t = o->getType();
-        return (t == ODG || t == ODN);
-    }
-
-    void moveToReady(Order* o) {
-        ORD_TYPE t = o->getType();
-        if (t == OT)                          RDY_OT.enqueue(o);
-        else if (t == OVG || t == OVN || t == OVC) RDY_OV_LIST.enqueue(o);
-        else                                        RDY_OD.enqueue(o);
-    }
+    void moveToReady(Order* order);
 
 public:
+
     Restaurant();
 
-    // ── ACTION HELPERS ────────────────────────────────
-    void AddOrder(Order* ord);
+    void AddOrder(Order* order);
     void Cancel_Order(int id);
 
-    // ── GETTERS ───────────────────────────────────────
+    void loadChefs();
+    void loadScooters();
+    void loadTables();
+
+    void generateRandomOrders();
+
+    void executeActions(int timestep);
+    void assignToChefs(int timestep);
+    void updateCooking(int timestep);
+    void moveReadyToService(int timestep);
+    void moveInServiceToFinished(int timestep);
+    void updateScooters(int timestep);
+    void updateTables(int timestep);
+
+    void randomSimulate();
+
     LinkedQueue<Order*>& getPendODG();
     LinkedQueue<Order*>& getPendODN();
     LinkedQueue<Order*>& getPendOT();
     LinkedQueue<Order*>& getPendOVN();
+
     Pend_OVC& getPendOVC();
     PriQueue<Order*>& getPendOVG();
+
+    LinkedQueue<Chef*>& getFreeCS();
+    LinkedQueue<Chef*>& getFreeCN();
+
     Cook_Ords& getCooking();
-    RDY_OV& getRdyOV();
+
+    LinkedQueue<Order*>& getReadyOT();
+    RDY_OV& getReadyOV();
+    LinkedQueue<Order*>& getReadyOD();
+
+    PriQueue<Scooter*>& getFreeScooters();
+    PriQueue<Scooter*>& getBackScooters();
+    LinkedQueue<Scooter*>& getMaintenance();
+
+    Fit_Tables& getFreeTables();
+
+    PriQueue<Order*>& getInService();
+
+    Stack<Order*>& getFinished();
     LinkedQueue<Order*>& getCancelled();
 
-    // ── PHASE 1.2 ─────────────────────────────────────
-    void loadChefs();
-    void loadScooters();
-    void loadTables();
-    void generateRandomOrders();
-    void randomSimulate();
-
-    // ── PHASE 2 ───────────────────────────────────────
-    void loadFromFile(string filename);
-    void executeActions(int t);
-    void assignToChefs(int t);
-    void updateCooking(int t);
-    void assignToService(int t);
-    void updateScooters(int t);
-    void updateTables(int t);
-    void simulate(string inputFile, string outputFile);
-    void produceOutput(string filename);
+    LinkedQueue<Request_Action*>& getRequests();
+    LinkedQueue<Cancel_Action*>& getCancels();
 };

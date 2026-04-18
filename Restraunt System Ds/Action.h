@@ -1,20 +1,24 @@
 #pragma once
 #include "Order.h"
+
 class Restaurant;
 
+// Base class for all actions
 class Action
 {
-    protected:
-    int TimeStep;
-    ORD_TYPE Order_Type;
-    int ID;
-    public:
+protected:
+    int timeStep;
+    int orderID;
 
-    Action(int t): TimeStep(t){};
+public:
 
-    int get_TimeStep(){return TimeStep;};
-    int getOrderID() { return ID; };
-    virtual void Act(Restaurant* pRes) = 0;
+    Action(int time, int id = 0);
 
+    virtual ~Action() {}
+
+    int getTimeStep() const;
+    int getOrderID() const;
+
+    // Execute action
+    virtual void Act(Restaurant* pRest) = 0;
 };
-

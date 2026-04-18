@@ -1,50 +1,42 @@
 #include "Table.h"
-using namespace std;
 
-
-
-Table::Table(int id, int cap) : ID(id), capacity(cap), freeSeats(cap),
-sharable(false), freeTime(0) {
-} 
-
-
-int Table::getCapacity()
+Table::Table(int tableID, int cap)
 {
-    return capacity;
-    
+    id = tableID;
+    capacity = cap;
+    freeSeats = cap;
+
+    sharable = false;
+    freeTime = 0;
 }
 
-int Table::getFreeSeats()
-{
-    return freeSeats;
-}
+int Table::getID() const { return id; }
 
-bool Table::isSharable()
-{
-    return sharable;
-}
+int Table::getCapacity() const { return capacity; }
 
-int Table::getFreeTime()
-{
-    return freeTime;
-}
+int Table::getFreeSeats() const { return freeSeats; }
 
-void Table::reserveSeats(int s, int duration, int currentTime, bool share)
+bool Table::isSharable() const { return sharable; }
+
+int Table::getFreeTime() const { return freeTime; }
+
+void Table::reserveSeats(int seats, int duration, int currentTime, bool share)
 {
-    freeSeats -= s;
+    freeSeats -= seats;
     sharable = share;
     freeTime = currentTime + duration;
 }
 
-void Table::releaseSeats(int s)
+void Table::releaseSeats(int seats)
 {
-    freeSeats += s;
-    if (freeSeats == capacity) sharable = false;
+    freeSeats += seats;
+
+    if (freeSeats == capacity)
+        sharable = false;
 }
 
 ostream& operator<<(ostream& out, Table* t)
 {
-    out << "[T" << t->ID << " cap:" << t->capacity
-        << " free:" << t->freeSeats << "]";
+    out << "[T" << t->id << "]";
     return out;
 }

@@ -1,65 +1,43 @@
 #pragma once
-#include"LinkedQueue.h"
-#include"Order.h"
+#include "LinkedQueue.h"
+#include "Order.h"
 
+// Pending cold delivery orders
 class Pend_OVC : public LinkedQueue<Order*>
 {
 public:
-	bool CancelOrder(int id)
-	{
-		Node<Order*>* curr = front;
-		
-		Node<Order*>* prev = nullptr;
-		cout << "entered cancel order in pend_ovc\n";
-		while (curr)
-		{
-		
-			if (curr->item->getID() == id)
-			{
-				if (!prev) // head will be removed
-				{
-					front = curr->next;
-				}
-				else
-				{
-					prev->next = curr->next;
-				}
-				if (curr == rear) // tail will be removed
-				{
-					rear = prev;
-				}
-				delete curr;
-				return true;
-			}
-			prev = curr;
-			curr = curr->next;
-		}
-		return false;
-	}
 
-	// add alongside existing CancelOrder():
-	Order* CancelAndReturn(int id) {
-		if (isEmpty()) return nullptr;
+    Order* CancelAndReturn(int id)
+    {
+        if (isEmpty())
+            return nullptr;
 
-		if (front->item->getID() == id) {
-			Order* found = front->item;
-			dequeue();
-			return found;
-		}
+        if (frontPtr->item->getID() == id)
+            return dequeue();
 
-		Node<Order*>* cur = front;
-		while (cur->next) {
-			if (cur->next->item->getID() == id) {
-				Node<Order*>* tmp = cur->next;
-				Order* found = tmp->item;
-				cur->next = tmp->next;
-				if (tmp == rear) rear = cur;
-				delete tmp;
-				count--;
-				return found;
-			}
-			cur = cur->next;
-		}
-		return nullptr;
-	}
+        Node<Order*>* current = frontPtr;
+
+        while (current->next)
+        {
+            if (current->next->item->getID() == id)
+            {
+                Node<Order*>* temp = current->next;
+                Order* order = temp->item;
+
+                current->next = temp->next;
+
+                if (temp == rearPtr)
+                    rearPtr = current;
+
+                delete temp;
+                count--;
+
+                return order;
+            }
+
+            current = current->next;
+        }
+
+        return nullptr;
+    }
 };

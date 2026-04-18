@@ -1,66 +1,105 @@
 ﻿#include "Request_Action.h"
 #include "Restaurant.h"
 
-Request_Action::Request_Action(ORD_TYPE ot, int t, int i, int s, double p)
-    : Action(t)
+Request_Action::Request_Action(
+    ORD_TYPE type,
+    int time,
+    int id,
+    int sz,
+    double pr)
+    : Action(time, id)
 {
-    Order_Type = ot;
-    ID = i;
-    Size = s;
-    Price = p;
-    Num_Seats = 0;
-    Duration = 0;
-    CanShare = false;
-    Distance = 0;
-    pOrder = nullptr;  // created lazily in Act()
+    orderType = type;
+    size = sz;
+    price = pr;
+
+    seats = 0;
+    duration = 0;
+    canShare = false;
+
+    distance = 0;
 }
 
-Request_Action::Request_Action(int t, Order* o) : Action(t)
+bool Request_Action::setDineIn(
+    int requiredSeats,
+    int dur,
+    bool share)
 {
-    TimeStep = t;
-    Order_Type = o->getType();
-    ID = o->getID();
-    Size = o->getSize();
-    Price = o->getPrice();
-	pOrder = o;  // already created, just store pointer
-}
-
-bool Request_Action::SetOD(int num, double dur, bool CS)
-{
-    if (Order_Type == ODG || Order_Type == ODN) {
-        Num_Seats = num;
-        Duration = dur;
-        CanShare = CS;
+    if (orderType == ODG || orderType == ODN)
+    {
+        seats = requiredSeats;
+        duration = dur;
+        canShare = share;
         return true;
     }
+
     return false;
 }
 
-bool Request_Action::SetOV(int d)
+bool Request_Action::setDelivery(int dist)
 {
-    if (Order_Type == OVC || Order_Type == OVG || Order_Type == OVN) {
-        Distance = d;
+    if (orderType == OVC ||
+        orderType == OVG ||
+        orderType == OVN)
+    {
+        distance = dist;
         return true;
     }
+
     return false;
 }
 
-// ── NEW: returns order ID for cancel logic ────────────────────────────────────
-int Request_Action::getOrderID() { return ID; }
+string Request_Action::getOrderType() const
+{
+    switch (orderType)
+    {
+    case ODG: return "ODG";
+    case ODN: return "ODN";
+    case OT:  return "OT";
+    case OVC: return "OVC";
+    case OVG: return "OVG";
+    case OVN: return "OVN";
+    default:  return "Unknown";
+    }
+}
 
-// ── NEW: returns the order pointer (created in Act, stored after) ─────────────
-Order* Request_Action::getOrder() { return pOrder; }
-
-// ── ACT: creates order and adds to restaurant ─────────────────────────────────
 void Request_Action::Act(Restaurant* pRest)
 {
-    if (Order_Type == ODG || Order_Type == ODN)
-        pOrder = new Order(ID, Order_Type, get_TimeStep(), Size, Price,
-            Num_Seats, Duration, CanShare);
-    else if (Order_Type == OVC || Order_Type == OVG || Order_Type == OVN)
-        pOrder = new Order(ID, Order_Type, get_TimeStep(), Size, Price, Distance);
-    else
-        pOrder = new Order(ID, Order_Type, get_TimeStep(), Size, Price);
+    Order* newOrder = nullptr;
 
-    pRest->AddOrder(pOrder);
+    if (orderType == ODG || orderType == ODN)
+    {
+        newOrder = new Order(
+            orderID,
+            orderType,
+            timeStep,
+            size,
+            price,
+            seats,
+            duration,
+            canShare);
+    }
+    else if (orderType == OVC ||
+        orderType == OVG ||
+        orderType == OVN)
+    {
+        newOrder = new Order(
+            orderID,
+            orderType,
+            timeStep,
+            size,
+            price,
+            distance);
+    }
+    else
+    {
+        newOrder = new Order(
+            orderID,
+            orderType,
+            timeStep,
+            size,
+            price);
+    }
+
+    pRest->AddOrder(newOrder);
 }

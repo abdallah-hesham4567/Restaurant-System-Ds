@@ -1,38 +1,44 @@
 ﻿#pragma once
 #include <iostream>
+
 using namespace std;
 
-class Scooter {
+// Delivery scooter
+class Scooter
+{
 private:
-    int    ID;
+    int id;
     double speed;
-    int    mainOrd;      // go to maintenance after this many orders
-    int    mainDur;      // maintenance duration in timesteps
-    int    ordCount;     // orders delivered so far
-    double distanceCut;  // total distance covered
-    int    mainEndTime;  // ← NEW: timestep when maintenance ends
-    int backTime;
+
+    int maintenanceOrders;
+    int maintenanceDuration;
+
+    int deliveredOrders;
+    double totalDistance;
+
+    int returnTime;
+    int maintenanceEnd;
+
 public:
-    Scooter(int id, double sp, int mOrd, int mDur);
 
-    int    getID();
-    double getSpeed();
-    int    getMainOrd();
-    int    getMainDur();
-    int    getOrdCount();
-    double getDistanceCut();
+    Scooter(int ID, double sp, int mOrders, int mDuration);
 
-    // new
-    int    getMainEndTime();
-    void   setMainEndTime(int t);
+    // Getters
+    int getID() const;
+    double getSpeed() const;
+    int getReturnTime() const;
+    int getMaintenanceEnd() const;
+    double getDistanceCut() const;
 
-    int getBackTime();
-    void setBackTime(int t);
+    // Setters
+    void setReturnTime(int time);
+    void setMaintenanceEnd(int time);
 
-    void   addDistance(double d);
-    void   incrementOrders();
-    bool   needsMaintenance();
-    void   resetOrdCount();
+    void addDistance(double d);
+    void incrementOrders();
+    void resetOrders();
+
+    bool needsMaintenance() const;
 
     friend ostream& operator<<(ostream& out, Scooter* s);
 };

@@ -1,82 +1,75 @@
 #pragma once
+#include <iostream>
 #include "Pri_Queue.h"
 #include "Order.h"
-#include "Chef.h"  
+#include "Chef.h"
+
+using namespace std;
+
+// Cooking orders list
 class Cook_Ords : public PriQueue<Order*>
 {
 public:
-    Order* CancelOrder(int ID)
+
+    // Remove order by ID and return pointer
+    Order* CancelAndReturn(int id)
     {
-        Node<Order*>* Curr = head;
-        Node<Order*>* prev = nullptr;
+        if (isEmpty())
+            return nullptr;
 
-        while (Curr)
+        if (head->item->getID() == id)
+            return dequeue();
+
+        Node<Order*>* current = head;
+
+        while (current->next)
         {
-            if (Curr->item->getID() == ID && Curr->item->getType() == OVC)
+            if (current->next->item->getID() == id)
             {
-                if (prev == nullptr)
-                    head = Curr->next;
-                else
-                    prev->next = Curr->next;
+                Node<Order*>* temp = current->next;
+                Order* order = temp->item;
 
-                Order* found = Curr->item;
-                delete Curr;
+                current->next = temp->next;
+                delete temp;
                 count--;
-                return found;
+
+                return order;
             }
-            prev = Curr;
-            Curr = Curr->next;
+
+            current = current->next;
         }
+
         return nullptr;
     }
 
-    Order* CancelAndReturn(int id) {
-        if (isEmpty()) return nullptr;
+    // Print [OrderID, ChefID]
+    void printIDs() const
+    {
+        Node<Order*>* current = head;
 
-        if (head->item->getID() == id) {
-            Order* found = head->item;
-            dequeue();
-            return found;
+        if (!current)
+        {
+            cout << "Empty";
+            return;
         }
 
-        Node<Order*>* cur = head;
-        while (cur->next) {
-            if (cur->next->item->getID() == id) {
-                Node<Order*>* tmp = cur->next;
-                Order* found = tmp->item;
-                cur->next = tmp->next;
-                delete tmp;
-                count--;
-                return found;
-            }
-            cur = cur->next;
-        }
-        return nullptr;
-    }
-
-    int getRandomID() {
-        if (isEmpty()) return -1;
-        int step = rand() % count;
-        Node<Order*>* cur = head;
-        for (int i = 0; i < step; i++)
-            cur = cur->next;
-        return cur->item->getID();
-    }
-
-    void printIDs() {
-        Node<Order*>* cur = head;
-        int printed = 0;
-        while (cur) {
+        while (current)
+        {
             int chefID = -1;
-			Chef* c = cur->item->getChef();
-            if (c)
-                chefID = c->getID();
-            cout << "[" << cur->item->getID() << ", " << chefID << "]";
-            printed++;
-            cur = cur->next;
-            if (cur) cout << ", ";
+
+            if (current->item->getChef())
+                chefID = current->item->getChef()->getID();
+
+            cout << "["
+                << current->item->getID()
+                << ", "
+                << chefID
+                << "]";
+
+            if (current->next)
+                cout << ", ";
+
+            current = current->next;
         }
-        if (printed == 0) cout << "none";
-        cout << endl;
     }
 };

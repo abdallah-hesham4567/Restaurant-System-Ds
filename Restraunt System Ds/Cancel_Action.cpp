@@ -1,27 +1,11 @@
 #include "Cancel_Action.h"
 #include "Restaurant.h"
 
-Cancel_Action::Cancel_Action(ORD_TYPE ot, int t, int id) : Action(t)
-{
-    Order_Type = ot;
-    ID = id;
-}
-
-Cancel_Action::Cancel_Action(int t, int id) : Action(t)
-{
-    TimeStep = t;
-	ID = id;
-}
+Cancel_Action::Cancel_Action(int time, int id)
+    : Action(time, id)
+{}
 
 void Cancel_Action::Act(Restaurant* pRest)
 {
-    if (Order_Type == ORD_TYPE::OVC)
-    {
-        pRest->Cancel_Order(ID);
-    }
-    else
-    {
-        //unable to delete order
-    }
+    pRest->Cancel_Order(orderID);
 }
-

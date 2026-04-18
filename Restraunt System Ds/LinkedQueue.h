@@ -1,75 +1,120 @@
 #pragma once
-#include "Node.h"
 #include <iostream>
+#include "Node.h"
+
 using namespace std;
 
-template <class T>
-class LinkedQueue {
+template <typename T>
+class LinkedQueue
+{
 protected:
-    Node<T>* front;
-    Node<T>* rear;
-    int      count;
+    Node<T>* frontPtr;
+    Node<T>* rearPtr;
+    int count;
+
 public:
-    LinkedQueue() : front(nullptr), rear(nullptr), count(0) {}
 
-    void enqueue(T item) {
-        Node<T>* NEW = new Node<T>(item);
-        if (!rear) front = rear = NEW;
+    LinkedQueue()
+    {
+        frontPtr = rearPtr = nullptr;
+        count = 0;
+    }
 
-        else 
-        { rear->next = NEW;
-        rear = NEW; }
+    ~LinkedQueue()
+    {
+        while (!isEmpty())
+            dequeue();
+    }
+
+    bool isEmpty() const
+    {
+        return count == 0;
+    }
+
+    int getCount() const
+    {
+        return count;
+    }
+
+    void enqueue(const T& item)
+    {
+        Node<T>* newNode = new Node<T>(item);
+
+        if (isEmpty())
+            frontPtr = rearPtr = newNode;
+        else
+        {
+            rearPtr->next = newNode;
+            rearPtr = newNode;
+        }
 
         count++;
     }
 
-    T dequeue() {
-        Node<T>* tmp = front;
-        T item = tmp->item;
-        front = front->next;
-        if (!front) rear = nullptr;
-        delete tmp;
+    T dequeue()
+    {
+        if (isEmpty())
+            return T();
+
+        Node<T>* temp = frontPtr;
+        T item = temp->item;
+
+        frontPtr = frontPtr->next;
+
+        if (!frontPtr)
+            rearPtr = nullptr;
+
+        delete temp;
         count--;
+
         return item;
     }
 
-    T peek() { return front->item; }
+    T peek() const
+    {
+        if (isEmpty())
+            return T();
 
-    bool isEmpty() { return count == 0; }
+        return frontPtr->item;
+    }
 
-    int  getCount() { return count; }
+    Node<T>* getFront() const
+    {
+        return frontPtr;
+    }
 
-    void print() {
-        Node<T>* cur = front;
-		if (!cur) { cout << "Empty\n"; return; }
-        while (cur) { 
-        cout << cur->item << " "; 
-        cur = cur->next; 
+    void printIDs() const
+    {
+        Node<T>* current = frontPtr;
+
+        if (!current)
+        {
+            cout << "Empty";
+            return;
         }
 
-        cout << endl;
-    }
+        while (current)
+        {
+            cout << current->item->getID();
 
-    void printIDs() {
-        Node<T>* cur = front;
-        if (!cur) { cout << "Empty\n"; return; }
-        while (cur) {
-            cout << cur->item->getID() << " ";
-            cur = cur->next;
+            if (current->next)
+                cout << ", ";
+
+            current = current->next;
         }
-        cout << endl;
-    }
-	Node<T>* getFront() { return front; }
-
-    int getRandomID() {
-        if (isEmpty()) return -1;
-        int step = rand() % count;
-        Node<T>* cur = front;
-        for (int i = 0; i < step; i++)
-            cur = cur->next;
-        return cur->item->getID();
     }
 
-   
+    int getRandomID() const
+    {
+        if (isEmpty())
+            return -1;
 
+        int steps = rand() % count;
+        Node<T>* current = frontPtr;
+
+        for (int i = 0; i < steps; i++)
+            current = current->next;
+
+        return current->item->getID();
+    }
 };

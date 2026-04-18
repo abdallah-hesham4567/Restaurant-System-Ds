@@ -1,33 +1,33 @@
 #pragma once
 #include <iostream>
 #include <string>
+
 using namespace std;
 
+// Represents one chef in restaurant
 class Chef
 {
 private:
-    int ID;
-    string type;
+    int id;
+    string type;      // CS or CN
     bool busy;
     int busyTime;
-     int CS_speed;
-    int CN_speed;
+    int speed;
 
 public:
-    
 
-    Chef(int id, string t,int speed);
+    Chef(int chefID, string chefType, int chefSpeed);
 
-    int getID();
-    string getType();
-    bool getBusy();
-    int getBusyTime();
-    int getSpeed();
+    // Getters
+    int getID() const;
+    string getType() const;
+    bool isBusy() const;
+    int getBusyTime() const;
+    int getSpeed() const;
 
-    void setBusy(bool b);
-    void setCSSpeed(int s);
-	void setCNSpeed(int s);
-    void addBusyTime(int t);
+    // Setters
+    void setBusy(bool state);
+    void addBusyTime(int time);
 
-    friend ostream& operator<<(ostream& out, Chef* c);
+    friend ostream& operator<<(ostream& out, Chef* chef);
 };

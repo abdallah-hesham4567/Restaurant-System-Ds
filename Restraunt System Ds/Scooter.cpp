@@ -1,31 +1,62 @@
 #include "Scooter.h"
 
-Scooter::Scooter(int id, double sp, int mOrd, int mDur)
-    : ID(id), speed(sp), mainOrd(mOrd), mainDur(mDur),
-    ordCount(0), distanceCut(0), mainEndTime(0) {
+Scooter::Scooter(int ID, double sp, int mOrders, int mDuration)
+{
+    id = ID;
+    speed = sp;
+
+    maintenanceOrders = mOrders;
+    maintenanceDuration = mDuration;
+
+    deliveredOrders = 0;
+    totalDistance = 0;
+
+    returnTime = 0;
+    maintenanceEnd = 0;
 }
 
-int    Scooter::getID() { return ID; }
-double Scooter::getSpeed() { return speed; }
-int    Scooter::getMainOrd() { return mainOrd; }
-int    Scooter::getMainDur() { return mainDur; }
-int    Scooter::getOrdCount() { return ordCount; }
-double Scooter::getDistanceCut() { return distanceCut; }
+int Scooter::getID() const { return id; }
 
-// new
-int  Scooter::getMainEndTime() { return mainEndTime; }
-void Scooter::setMainEndTime(int t) { mainEndTime = t; }
+double Scooter::getSpeed() const { return speed; }
 
-int Scooter::getBackTime() { return backTime; }
-void Scooter::setBackTime(int t) { backTime = t; }
+int Scooter::getReturnTime() const { return returnTime; }
 
+int Scooter::getMaintenanceEnd() const { return maintenanceEnd; }
 
-void Scooter::addDistance(double d) { distanceCut += d; }
-void Scooter::incrementOrders() { ordCount++; }
-bool Scooter::needsMaintenance() { return ordCount >= mainOrd; }
-void Scooter::resetOrdCount() { ordCount = 0; }
+double Scooter::getDistanceCut() const { return totalDistance; }
 
-ostream& operator<<(ostream& out, Scooter* s) {
-    out << "[S" << s->getID() << "]";
+void Scooter::setReturnTime(int time)
+{
+    returnTime = time;
+}
+
+void Scooter::setMaintenanceEnd(int time)
+{
+    maintenanceEnd = time;
+}
+
+void Scooter::addDistance(double d)
+{
+    totalDistance += d;
+}
+
+void Scooter::incrementOrders()
+{
+    deliveredOrders++;
+}
+
+void Scooter::resetOrders()
+{
+    deliveredOrders = 0;
+}
+
+bool Scooter::needsMaintenance() const
+{
+    return deliveredOrders >= maintenanceOrders;
+}
+
+ostream& operator<<(ostream& out, Scooter* s)
+{
+    out << "[S" << s->id << "]";
     return out;
 }

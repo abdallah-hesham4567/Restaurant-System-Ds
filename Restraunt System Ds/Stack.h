@@ -1,49 +1,92 @@
 #pragma once
+#include <iostream>
 #include "Node.h"
-template <class T>
-class Stack {
-protected:
-    Node<T>* top;
-    int      count;
-public:
-    Stack() : top(nullptr), count(0) {}
 
-    void push(T item) {
-        Node<T>* n = new Node<T>(item);
-        n->next = top;
-        top = n;
+using namespace std;
+
+template <typename T>
+class Stack
+{
+private:
+    Node<T>* topPtr;
+    int count;
+
+public:
+
+    Stack()
+    {
+        topPtr = nullptr;
+        count = 0;
+    }
+
+    ~Stack()
+    {
+        while (!isEmpty())
+            pop();
+    }
+
+    bool isEmpty() const
+    {
+        return count == 0;
+    }
+
+    int getCount() const
+    {
+        return count;
+    }
+
+    void push(const T& item)
+    {
+        Node<T>* newNode = new Node<T>(item);
+
+        newNode->next = topPtr;
+        topPtr = newNode;
+
         count++;
     }
 
-    T pop() {
-        Node<T>* tmp = top;
-        T item = tmp->item;
-        top = top->next;
-        delete tmp;
+    T pop()
+    {
+        if (isEmpty())
+            return T();
+
+        Node<T>* temp = topPtr;
+        T item = temp->item;
+
+        topPtr = topPtr->next;
+
+        delete temp;
         count--;
+
         return item;
     }
 
-    T peek() { return top->item; }
+    T peek() const
+    {
+        if (isEmpty())
+            return T();
 
-    bool isEmpty() { return count == 0; }
-
-    int  getCount() { return count; }
-
-    void print() {
-        Node<T>* cur = top;
-        while (cur) { cout << cur->item << " "; cur = cur->next; }
-        cout << endl;
+        return topPtr->item;
     }
 
-    void printIDs() {
-        Node<T>* cur = top;
-        if (!cur) { cout << "Empty\n"; return; }
-        while (cur) {
-            cout << cur->item->getID() << " ";
-            cur = cur->next;
-        }
-        cout << endl;
-	}
+    void printIDs() const
+    {
+        Node<T>* current = topPtr;
 
+        if (!current)
+        {
+            cout << "Empty";
+            return;
+        }
+
+        while (current)
+        {
+            cout << current->item->getID();
+
+            if (current->next)
+                cout << ", ";
+
+            current = current->next;
+        }
+    }
 };

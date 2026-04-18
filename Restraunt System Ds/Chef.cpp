@@ -1,9 +1,6 @@
 #include "Chef.h"
 #include "Scooter.h"
 
-
-
-
 Chef::Chef(int id, string t, int speed)
 {
     if (t == "CN")

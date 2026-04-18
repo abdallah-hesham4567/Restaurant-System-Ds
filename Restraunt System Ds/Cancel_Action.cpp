@@ -7,6 +7,12 @@ Cancel_Action::Cancel_Action(ORD_TYPE ot, int t, int id) : Action(t)
     ID = id;
 }
 
+Cancel_Action::Cancel_Action(int t, int id) : Action(t)
+{
+    TimeStep = t;
+	ID = id;
+}
+
 void Cancel_Action::Act(Restaurant* pRest)
 {
     if (Order_Type == ORD_TYPE::OVC)

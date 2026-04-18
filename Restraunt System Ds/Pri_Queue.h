@@ -54,4 +54,13 @@ public:
         cout << endl;
 	}
 	Node<T>* getFront() { return head; }
+    // add to PriQueue class:
+    int getRandomID() {
+        if (isEmpty()) return -1;
+        int step = rand() % count;
+        Node<T>* cur = head;
+        for (int i = 0; i < step; i++)
+            cur = cur->next;
+        return cur->item->getID();
+    }
 };

@@ -52,4 +52,28 @@ public:
         }
         cout << endl;
 	}
+
+    // used by Restaurant to remove a specific table from BUSY lists
+    bool removeTable(int id) {
+        if (isEmpty()) return false;
+
+        if (head->item->getID() == id) {
+            dequeue();
+            return true;
+        }
+
+        Node<Table*>* cur = head;
+        while (cur->next) {
+            if (cur->next->item->getID() == id) {
+                Node<Table*>* tmp = cur->next;
+                cur->next = tmp->next;
+                delete tmp;
+                count--;
+                return true;
+            }
+            cur = cur->next;
+        }
+        return false;
+    }
+
 };

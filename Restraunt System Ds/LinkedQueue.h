@@ -60,4 +60,16 @@ public:
         cout << endl;
     }
 	Node<T>* getFront() { return front; }
+
+    int getRandomID() {
+        if (isEmpty()) return -1;
+        int step = rand() % count;
+        Node<T>* cur = front;
+        for (int i = 0; i < step; i++)
+            cur = cur->next;
+        return cur->item->getID();
+    }
+
+   
+
 };

@@ -14,7 +14,6 @@ class Action
 
     int get_TimeStep(){return TimeStep;};
     int getOrderID() { return ID; };
-    ORD_TYPE getOrderType() { return Order_Type; };
     virtual void Act(Restaurant* pRes) = 0;
 
 };

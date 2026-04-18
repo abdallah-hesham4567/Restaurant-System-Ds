@@ -1,5 +1,7 @@
 #pragma once
 #include "Action.h"
+#include "Order.h"
+class Restaurant;
 
 class Cancel_Action : public Action
 {

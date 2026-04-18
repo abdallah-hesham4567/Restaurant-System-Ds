@@ -2,8 +2,9 @@
 #include "Action.h"
 #include "Order.h"
 
+class Restaurant;
 
-class Request_Action : public Action
+class Request_Action  :  public Action
 {   
     private:
     ORD_TYPE Order_Type;

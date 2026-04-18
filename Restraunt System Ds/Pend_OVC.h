@@ -5,13 +5,15 @@
 class Pend_OVC : public LinkedQueue<Order*>
 {
 public:
-	bool Cancel_Order(int id)
+	bool CancelOrder(int id)
 	{
 		Node<Order*>* curr = front;
+		
 		Node<Order*>* prev = nullptr;
-
+		cout << "entered cancel order in pend_ovc\n";
 		while (curr)
 		{
+		
 			if (curr->item->getID() == id)
 			{
 				if (!prev) // head will be removed

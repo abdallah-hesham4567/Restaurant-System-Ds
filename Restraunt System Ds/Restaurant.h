@@ -243,8 +243,7 @@ public:
             }
         }
 		// print elements of each pending list
-		
-       
+		      
     }
 
     void randomSimulate() {

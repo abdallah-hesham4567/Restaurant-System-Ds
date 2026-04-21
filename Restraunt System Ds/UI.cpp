@@ -90,27 +90,27 @@ void UI::printPendingOrders(
         << " ODG : ";
     pendODG.printIDs();
     cout << endl;
-
+    cout << "/////////////////////" << endl;
     cout << pendODN.getCount()
         << " ODN : ";
     pendODN.printIDs();
     cout << endl;
-
+    cout << "/////////////////////" << endl;
     cout << pendOT.getCount()
         << " OT  : ";
     pendOT.printIDs();
     cout << endl;
-
+    cout << "/////////////////////" << endl;
     cout << pendOVN.getCount()
         << " OVN : ";
     pendOVN.printIDs();
     cout << endl;
-
+    cout << "/////////////////////" << endl;
     cout << pendOVC.getCount()
         << " OVC : ";
     pendOVC.printIDs();
     cout << endl;
-
+    cout << "/////////////////////" << endl;
     cout << pendOVG.getCount()
         << " OVG : ";
     pendOVG.printIDs();

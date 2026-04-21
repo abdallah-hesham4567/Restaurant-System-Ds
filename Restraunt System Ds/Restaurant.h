@@ -32,17 +32,17 @@ class Restaurant
 {
 private:
 
-    // Actions 
+    // Actions
     LinkedQueue<Request_Action*> requestList;
-    LinkedQueue<Cancel_Action*> cancelList;
+    LinkedQueue<Cancel_Action*>  cancelList;
 
     // Pending Orders
     LinkedQueue<Order*> pendODG;
     LinkedQueue<Order*> pendODN;
     LinkedQueue<Order*> pendOT;
     LinkedQueue<Order*> pendOVN;
-    Pend_OVC pendOVC;
-    PriQueue<Order*> pendOVG;
+    Pend_OVC            pendOVC;
+    PriQueue<Order*>    pendOVG;
 
     // Free Chefs
     LinkedQueue<Chef*> freeCS;
@@ -53,42 +53,57 @@ private:
 
     // Ready
     LinkedQueue<Order*> readyOT;
-    RDY_OV readyOV;
+    RDY_OV              readyOV;
     LinkedQueue<Order*> readyOD;
 
     // In Service
     PriQueue<Order*> inService;
 
     // Scooters
-    PriQueue<Scooter*> freeScooters;
-    PriQueue<Scooter*> backScooters;
+    PriQueue<Scooter*>    freeScooters;
+    PriQueue<Scooter*>    backScooters;
     LinkedQueue<Scooter*> maintenanceScooters;
 
     // Tables
     Fit_Tables freeTables;
-    Fit_Tables busy;
     Fit_Tables busy_sharable;
     Fit_Tables busy_noshare;
 
-
     // Results
-    Stack<Order*> finishedOrders;
-    LinkedQueue<Order*> cancelledOrders;
+    Stack<Order*>        finishedOrders;
+    LinkedQueue<Order*>  cancelledOrders;
 
     // Config
     int csCount, cnCount;
     int csSpeed, cnSpeed;
-    int scooterCount, tableCount;
-
+    int scooterCount, scooterSpeed;
+    int maintOrders, maintDuration;
+    int tableCount;
+    int TH;                 // overwait threshold
     bool interactiveMode;
+
+    // Statistics helpers
+    int totalSimTime;
 
     UI ui;
 
+    // --- helpers ---
     bool pendingEmpty();
     bool readyEmpty();
     bool allDone();
 
     void moveToReady(Order* order);
+
+    // --- Phase 2 internal steps ---
+    void processActions(int timestep);   // Feature 3 & 4
+    void assignToChefs(int timestep);    // Feature 8
+    void updateCooking(int timestep);    // Feature 9
+    void moveReadyToService(int timestep);       // Features 10,11,12
+    void moveInServiceToFinished(int timestep);  // Features 6 & 7
+    void updateScooters(int timestep);   // Feature 5
+    void updateTables(int timestep);
+
+    void generateOutputFile();           // Feature 13
 
 public:
 
@@ -101,46 +116,9 @@ public:
     void loadScooters();
     void loadTables();
 
-    void generateRandomOrders();
+    // Feature 2
+    bool loadFromFile(const string& filename);
 
-    void executeActions(int timestep);
-    void assignToChefs(int timestep);
-    void updateCooking(int timestep);
-    void moveReadyToService(int timestep);
-    void moveInServiceToFinished(int timestep);
-    void updateScooters(int timestep);
-    void updateTables(int timestep);
-
-    void randomSimulate();
-
-    LinkedQueue<Order*>& getPendODG();
-    LinkedQueue<Order*>& getPendODN();
-    LinkedQueue<Order*>& getPendOT();
-    LinkedQueue<Order*>& getPendOVN();
-
-    Pend_OVC& getPendOVC();
-    PriQueue<Order*>& getPendOVG();
-
-    LinkedQueue<Chef*>& getFreeCS();
-    LinkedQueue<Chef*>& getFreeCN();
-
-    Cook_Ords& getCooking();
-
-    LinkedQueue<Order*>& getReadyOT();
-    RDY_OV& getReadyOV();
-    LinkedQueue<Order*>& getReadyOD();
-
-    PriQueue<Scooter*>& getFreeScooters();
-    PriQueue<Scooter*>& getBackScooters();
-    LinkedQueue<Scooter*>& getMaintenance();
-
-    Fit_Tables& getFreeTables();
-
-    PriQueue<Order*>& getInService();
-
-    Stack<Order*>& getFinished();
-    LinkedQueue<Order*>& getCancelled();
-
-    LinkedQueue<Request_Action*>& getRequests();
-    LinkedQueue<Cancel_Action*>& getCancels();
+    // Feature 1 - main simulation loop
+    void simulate();
 };

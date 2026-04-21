@@ -18,6 +18,8 @@ Request_Action::Request_Action(
     canShare = false;
 
     distance = 0;
+    order = nullptr;
+
 }
 
 bool Request_Action::setDineIn(

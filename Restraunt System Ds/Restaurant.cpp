@@ -8,23 +8,14 @@ Constructor
 
 Restaurant::Restaurant()
 {
-    srand((unsigned)time(0));
-
-    csCount = 3;
-    cnCount = 4;
-
-    csSpeed = 3;
-    cnSpeed = 2;
-
-    scooterCount = 5;
-    tableCount = 7;
-
+    csCount = cnCount = 0;
+    csSpeed = cnSpeed = 0;
+    scooterCount = scooterSpeed = 0;
+    maintOrders = maintDuration = 0;
+    tableCount = 0;
+    TH = 0;
+    totalSimTime = 0;
     interactiveMode = true;
-
-    loadChefs();
-    loadScooters();
-    loadTables();
-    generateRandomOrders();
 }
 
 /*
@@ -85,25 +76,135 @@ void Restaurant::loadScooters()
 {
     for (int i = 1; i <= scooterCount; i++)
     {
-        Scooter* s = new Scooter(i, 100, 1, 3);
+        Scooter* s = new Scooter(i, scooterSpeed, maintOrders, maintDuration);
         freeScooters.enqueue(s, -(int)s->getDistanceCut());
     }
 }
 
 void Restaurant::loadTables()
 {
-    for (int i = 1; i <= tableCount; i++)
-    {
-        int cap = 2 + rand() % 6;
-        Table* t = new Table(i, cap);
-
-        freeTables.enqueue(t, -cap);
-    }
+    // Tables are loaded from file in loadFromFile()
+    // Each table pair (count, capacity) is handled there
 }
 
 /*
 ==================================================
-Orders
+Load From File  [Feature 2]
+==================================================
+*/
+
+bool Restaurant::loadFromFile(const string& filename)
+{
+    ifstream fin(filename);
+    if (!fin.is_open())
+    {
+        cout << "Error: cannot open file " << filename << endl;
+        return false;
+    }
+
+    // Line 1: CN CS
+    fin >> cnCount >> csCount;
+
+    // Line 2: CN_speed CS_speed
+    fin >> cnSpeed >> csSpeed;
+
+    // Line 3: S_count S_speed
+    fin >> scooterCount >> scooterSpeed;
+
+    // Line 4: Maint_Orders Maint_Duration
+    fin >> maintOrders >> maintDuration;
+
+    // Line 5: Total_no_of_Tables
+    fin >> tableCount;
+
+    // Table pairs: count capacity (pairs sum to tableCount)
+    int id = 1;
+    int remaining = tableCount;
+    while (remaining > 0)
+    {
+        int cnt, cap;
+        fin >> cnt >> cap;
+        for (int i = 0; i < cnt; i++)
+        {
+            Table* t = new Table(id++, cap);
+            freeTables.enqueue(t, -cap);
+        }
+        remaining -= cnt;
+    }
+
+    // Line: TH (overwait threshold)
+    fin >> TH;
+
+    // Number of actions
+    int M;
+    fin >> M;
+
+    for (int i = 0; i < M; i++)
+    {
+        char actionType;
+        fin >> actionType;
+
+        if (actionType == 'Q')
+        {
+            // Q TYP TQ ID SIZE PRICE [SEATS DURATION CANSHARE | DISTANCE]
+            string typ;
+            int tq, ordID, size;
+            double price;
+            fin >> typ >> tq >> ordID >> size >> price;
+
+            ORD_TYPE t;
+
+            if (typ == "ODG") t = ODG;
+            else if (typ == "ODN") t = ODN;
+            else if (typ == "OT")  t = OT;
+            else if (typ == "OVN") t = OVN;
+            else if (typ == "OVC") t = OVC;
+            else                   t = OVG;
+
+
+            Request_Action* ra = new Request_Action(t, tq, ordID, size, price);
+
+            if (t == ODG || t == ODN)
+            {
+                int seats, duration;
+                char shareChar;
+                fin >> seats >> duration >> shareChar;
+                bool canShare = (shareChar == 'Y' || shareChar == 'y');
+                ra->setDineIn(seats, duration, canShare);
+            }
+            else if (t == OVN || t == OVC || t == OVG)
+            {
+                int dist;
+                fin >> dist;
+                ra->setDelivery(dist);
+            }
+            // OT needs no extra fields
+
+            requestList.enqueue(ra);
+        }
+
+   
+        else if (actionType == 'X')
+        {
+            int tcancel, oid;
+            fin >> tcancel >> oid;
+            Cancel_Action* ca = new Cancel_Action(tcancel, oid);
+            cancelList.enqueue(ca);
+        }
+    }
+
+    fin.close();
+
+    // Now load chefs and scooters with the parsed config
+    loadChefs();
+    loadScooters();
+
+    return true;
+}
+
+/*
+==================================================
+Add Order
 ==================================================
 */
 
@@ -113,29 +214,30 @@ void Restaurant::AddOrder(Order* order)
 
     if (t == ODG)
         pendODG.enqueue(order);
-
     else if (t == ODN)
         pendODN.enqueue(order);
-
     else if (t == OT)
         pendOT.enqueue(order);
-
     else if (t == OVN)
         pendOVN.enqueue(order);
-
     else if (t == OVC)
         pendOVC.enqueue(order);
-
     else if (t == OVG)
         pendOVG.enqueue(order, (int)order->getPriority());
 }
+
+/*
+==================================================
+Cancel Order  [Feature 4]
+==================================================
+*/
 
 void Restaurant::Cancel_Order(int id)
 {
     Order* o = nullptr;
 
+    // 1. Try pending OVC
     o = pendOVC.CancelAndReturn(id);
-
     if (o)
     {
         o->setStatus(CANCELLED_S);
@@ -143,8 +245,8 @@ void Restaurant::Cancel_Order(int id)
         return;
     }
 
+    // 2. Try ready OV
     o = readyOV.CancelAndReturn(id);
-
     if (o)
     {
         o->setStatus(CANCELLED_S);
@@ -152,108 +254,53 @@ void Restaurant::Cancel_Order(int id)
         return;
     }
 
+    // 3. Try cooking
     o = cooking.CancelAndReturn(id);
-
     if (o)
     {
         Chef* c = o->getChef();
-
         if (c)
         {
             c->setBusy(false);
-
             if (c->getType() == "CS")
                 freeCS.enqueue(c);
             else
                 freeCN.enqueue(c);
         }
-
         o->setStatus(CANCELLED_S);
         cancelledOrders.enqueue(o);
     }
 }
-/*
-==================================================
-Generate Random Orders
-==================================================
-*/
-
-void Restaurant::generateRandomOrders()
-{
-    int id = 1;
-
-    for (int tq = 1; tq <= 20; tq++)
-    {
-        for (int k = 0; k < 25; k++)
-        {
-            int kind = rand() % 6;
-            int size = rand() % 10 + 1;
-            double money = rand() % 300 + 50;
-
-            Request_Action* act = nullptr;
-
-            if (kind == 0)
-            {
-                act = new Request_Action(ODG, tq, id, size, money);
-                act->setDineIn(rand() % 4 + 1,
-                    rand() % 10 + 2,
-                    rand() % 2);
-            }
-            else if (kind == 1)
-            {
-                act = new Request_Action(ODN, tq, id, size, money);
-                act->setDineIn(rand() % 4 + 1,
-                    rand() % 10 + 2,
-                    rand() % 2);
-            }
-            else if (kind == 2)
-            {
-                act = new Request_Action(OT, tq, id, size, money);
-            }
-            else if (kind == 3)
-            {
-                act = new Request_Action(OVN, tq, id, size, money);
-                act->setDelivery(rand() % 3000 + 300);
-            }
-            else if (kind == 4)
-            {
-                act = new Request_Action(OVC, tq, id, size, money);
-                act->setDelivery(rand() % 3000 + 300);
-            }
-            else
-            {
-                act = new Request_Action(OVG, tq, id, size, money);
-                act->setDelivery(rand() % 3000 + 300);
-            }
-
-            requestList.enqueue(act);
-            id++;
-        }
-    }
-}
 
 /*
 ==================================================
-Actions
+Process Actions  [Feature 3 & 4]
+Move due Request/Cancel actions to pending lists
 ==================================================
 */
 
-void Restaurant::executeActions(int timestep)
+void Restaurant::processActions(int timestep)
 {
-    while (!requestList.isEmpty() &&
-        requestList.peek()->getTimeStep() <= timestep)
+    // Process request actions whose TQ <= current timestep
+    while (!requestList.isEmpty())
     {
-        Request_Action* a = requestList.dequeue();
-        a->Act(this);
-        delete a;
+        Request_Action* ra = requestList.peek();
+        if (ra->getTimeStep() > timestep)
+            break;
+
+        requestList.dequeue();
+        ra->Act(this);
     }
 
-    while (!cancelList.isEmpty() &&
-        cancelList.peek()->getTimeStep() <= timestep)
+    // Process cancel actions whose Tcancel <= current timestep
+    while (!cancelList.isEmpty())
     {
-        Cancel_Action* c = cancelList.dequeue();
-        c->Act(this);
-        delete c;
+        Cancel_Action* ca = cancelList.peek();
+        if (ca->getTimeStep() > timestep)
+            break;
+
+        cancelList.dequeue();
+        ca->Act(this);
     }
 }
 
@@ -269,16 +316,15 @@ void Restaurant::moveToReady(Order* o)
 
     if (t == OT)
         readyOT.enqueue(o);
-
     else if (t == OVC || t == OVG || t == OVN)
         readyOV.enqueue(o);
-
     else
         readyOD.enqueue(o);
 }
+
 /*
 ==================================================
-Assign Orders To Chefs
+Assign Orders To Chefs  [Feature 8]
 ==================================================
 */
 
@@ -304,11 +350,8 @@ void Restaurant::assignToChefs(int timestep)
         else if (!pendODN.isEmpty())
         {
             o = pendODN.dequeue();
-
-            if (!freeCN.isEmpty())
-                c = freeCN.dequeue();
-            else if (!freeCS.isEmpty())
-                c = freeCS.dequeue();
+            if (!freeCN.isEmpty())      c = freeCN.dequeue();
+            else if (!freeCS.isEmpty()) c = freeCS.dequeue();
         }
         else if (!pendOVN.isEmpty() && !freeCN.isEmpty())
         {
@@ -318,11 +361,8 @@ void Restaurant::assignToChefs(int timestep)
         else if (!pendOVC.isEmpty())
         {
             o = pendOVC.dequeue();
-
-            if (!freeCN.isEmpty())
-                c = freeCN.dequeue();
-            else if (!freeCS.isEmpty())
-                c = freeCS.dequeue();
+            if (!freeCN.isEmpty())      c = freeCN.dequeue();
+            else if (!freeCS.isEmpty()) c = freeCS.dequeue();
         }
         else if (!pendOT.isEmpty() && !freeCN.isEmpty())
         {
@@ -331,17 +371,14 @@ void Restaurant::assignToChefs(int timestep)
         }
 
         if (!o || !c)
-            continue;
+            break;
 
         o->setChef(c);
         o->setChefID(c->getID());
         o->setTA(timestep);
         o->setStatus(COOKING);
 
-        int finish =
-            timestep +
-            (o->getSize() / c->getSpeed()) + 1;
-
+        int finish = timestep + (o->getSize() / c->getSpeed()) + 1;
         o->setFinishCookTime(finish);
 
         c->setBusy(true);
@@ -353,7 +390,7 @@ void Restaurant::assignToChefs(int timestep)
 
 /*
 ==================================================
-Cooking Update
+Cooking Update  [Feature 9]
 ==================================================
 */
 
@@ -368,7 +405,6 @@ void Restaurant::updateCooking(int timestep)
             cooking.dequeue();
 
             Chef* c = o->getChef();
-
             c->setBusy(false);
 
             if (c->getType() == "CS")
@@ -388,12 +424,7 @@ void Restaurant::updateCooking(int timestep)
 
 /*
 ==================================================
-Ready -> Service
-==================================================
-*/
-/*
-==================================================
-Move InService -> Finished
+Move InService -> Finished  [Feature 6 & 7]
 ==================================================
 */
 
@@ -414,21 +445,13 @@ void Restaurant::moveInServiceToFinished(int timestep)
         if (o->isDineIn())
         {
             Table* t = o->getTable();
-
-            freeTables.enqueue(
-                t,
-                -t->getCapacity());
+            freeTables.enqueue(t, -t->getCapacity());
         }
         else if (o->isDelivery())
         {
             Scooter* s = o->getScooter();
-
-            int back =
-                timestep +
-                (o->getDistance() / s->getSpeed()) + 1;
-
+            int back = timestep + (o->getDistance() / s->getSpeed()) + 1;
             s->setReturnTime(back);
-
             backScooters.enqueue(s, -back);
         }
 
@@ -438,17 +461,24 @@ void Restaurant::moveInServiceToFinished(int timestep)
 
 /*
 ==================================================
-Finish Orders
+Ready -> Service  [Features 10, 11, 12]
 ==================================================
 */
+
 void Restaurant::moveReadyToService(int timestep)
 {
-    // Dine In Orders
+    // --- Dine-In Orders [Feature 10] ---
     while (!readyOD.isEmpty())
     {
         Order* o = readyOD.peek();
+        Table* t = nullptr;
 
-        Table* t = freeTables.getBest(o->getSeats());
+        if (o->getCanShare())
+            t = busy_sharable.getBest(o->getSeats());
+
+        // 2. If no sharable table fits, try a free table
+        if (!t)
+            t = freeTables.getBest(o->getSeats());
 
         if (!t)
             break;
@@ -458,40 +488,36 @@ void Restaurant::moveReadyToService(int timestep)
         o->setTable(t);
         o->setTableID(t->getID());
 
-        t->reserveSeats(
-            o->getSeats(),
-            o->getDuration(),
-            timestep,
-            o->getCanShare());
+        t->reserveSeats(o->getSeats(), o->getDuration(), timestep, o->getCanShare());
 
         o->setTS(timestep);
         o->setStatus(INSERVICE);
 
-        int finish =
-            timestep + o->getDuration();
-
+        int finish = timestep + o->getDuration();
         o->setFinishServiceTime(finish);
 
         inService.enqueue(o, -finish);
+
+        // 4. Re-classify the table after seating
+        if (t->getFreeSeats() > 0 && t->isSharable())
+            busy_sharable.enqueue(t, -t->getFreeSeats()); // best fit = least free seats first
+        else if (t->getFreeSeats() > 0 && !t->isSharable())
+            busy_noshare.enqueue(t, -t->getFreeSeats());
+        // if no free seats left, table sits out of all lists until moveInServiceToFinished returns it
     }
 
-    // Delivery Orders
-    while (!readyOV.isEmpty() &&
-        !freeScooters.isEmpty())
+    // --- Delivery Orders [Feature 11] ---
+    while (!readyOV.isEmpty() && !freeScooters.isEmpty())
     {
         Order* o = readyOV.dequeue();
         Scooter* s = freeScooters.dequeue();
 
         o->setScooter(s);
         o->setScooterID(s->getID());
-
         o->setTS(timestep);
         o->setStatus(INSERVICE);
 
-        int finish =
-            timestep +
-            (o->getDistance() / s->getSpeed()) + 1;
-
+        int finish = timestep + (o->getDistance() / s->getSpeed()) + 1;
         o->setFinishServiceTime(finish);
 
         s->incrementOrders();
@@ -500,7 +526,7 @@ void Restaurant::moveReadyToService(int timestep)
         inService.enqueue(o, -finish);
     }
 
-    // Takeaway Orders
+    // --- Takeaway Orders [Feature 12] ---
     while (!readyOT.isEmpty())
     {
         Order* o = readyOT.dequeue();
@@ -512,83 +538,16 @@ void Restaurant::moveReadyToService(int timestep)
         finishedOrders.push(o);
     }
 }
-//void Restaurant::moveReadyToService(int timestep)
-//{
-//    // Dine In Orders
-//    while (!readyOD.isEmpty())
-//    {
-//        Order* o = readyOD.peek();
-//        Table* t = nullptr;
-//
-//        // 1. Try a free table first (best fit)
-//        t = freeTables.getBest(o->getSeats());
-//
-//        // 2. If no free table fits, try a sharable busy table
-//        if (!t && o->getCanShare())
-//            t = busy_sharable.getBest(o->getSeats());
-//
-//        // 3. No fit at all, stop trying for now
-//        if (!t)
-//            break;
-//
-//        readyOD.dequeue();
-//        o->setTable(t);
-//        o->setTableID(t->getID());
-//        t->reserveSeats(
-//            o->getSeats(),
-//            o->getDuration(),
-//            timestep,
-//            o->getCanShare());
-//        o->setTS(timestep);
-//        o->setStatus(INSERVICE);
-//        int finish = timestep + o->getDuration();
-//        o->setFinishServiceTime(finish);
-//        inService.enqueue(o, -finish);
-//
-//        // 4. Re-enqueue the table into the correct busy list
-//        if (t->getFreeSeats() > 0 && t->isSharable())
-//            busy_sharable.enqueue(t, t->getFreeSeats());
-//        else if (t->getFreeSeats() > 0 && !t->isSharable())
-//            busy_noshare.enqueue(t, t->getFreeSeats());
-//        // if no free seats left, table stays out of all lists until it frees up
-//    }
-//
-//    // Delivery Orders (unchanged)
-//    while (!readyOV.isEmpty() && !freeScooters.isEmpty())
-//    {
-//        Order* o = readyOV.dequeue();
-//        Scooter* s = freeScooters.dequeue();
-//        o->setScooter(s);
-//        o->setScooterID(s->getID());
-//        o->setTS(timestep);
-//        o->setStatus(INSERVICE);
-//        int finish =
-//            timestep +
-//            (o->getDistance() / s->getSpeed()) + 1;
-//        o->setFinishServiceTime(finish);
-//        s->incrementOrders();
-//        s->addDistance(o->getDistance());
-//        inService.enqueue(o, -finish);
-//    }
-//
-//    // Takeaway Orders (unchanged)
-//    while (!readyOT.isEmpty())
-//    {
-//        Order* o = readyOT.dequeue();
-//        o->setTS(timestep);
-//        o->setTF(timestep + 1);
-//        o->setStatus(FINISHED_S);
-//        finishedOrders.push(o);
-//    }
-//}
+
 /*
 ==================================================
-Scooters / Tables
+Scooters Update  [Feature 5]
 ==================================================
 */
 
 void Restaurant::updateScooters(int timestep)
 {
+    // Back_Scooters -> Free or Maintenance
     while (!backScooters.isEmpty())
     {
         Scooter* s = backScooters.peek();
@@ -600,115 +559,157 @@ void Restaurant::updateScooters(int timestep)
             if (s->needsMaintenance())
                 maintenanceScooters.enqueue(s);
             else
-                freeScooters.enqueue(
-                    s,
-                    -(int)s->getDistanceCut());
+                freeScooters.enqueue(s, -(int)s->getDistanceCut());
         }
         else
             break;
     }
 
-    if (!maintenanceScooters.isEmpty() &&
-        rand() % 2 == 0)
+   // Maint_Scooters -> Free (check if maintenance duration is done)
+    while (!maintenanceScooters.isEmpty())
     {
-        Scooter* s =
+        Scooter* s = maintenanceScooters.peek();
+        if (s->getMaintenanceEnd() <= timestep)
+        {
             maintenanceScooters.dequeue();
-
-        s->resetOrders();
-
-        freeScooters.enqueue(
-            s,
-            -(int)s->getDistanceCut());
+            s->resetOrders();
+            freeScooters.enqueue(s, -(int)s->getDistanceCut());
+        }
+        else
+            break;
     }
 }
 
-void Restaurant::updateTables(int timestep)
+void Restaurant::updateTables(int /*timestep*/)
 {
-    // reserved for future phase
+    // reserved for future use
 }
 
 /*
 ==================================================
-Simulation
+Generate Output File  [Feature 13]
 ==================================================
 */
 
-void Restaurant::randomSimulate()
+void Restaurant::generateOutputFile()
 {
+    ofstream fout("output.txt");
+
+    // Print finished orders sorted by TF descending (stack is LIFO = descending push order)
+    fout << "Finished Orders (sorted by TF descending):\n";
+    fout << "TF\tID\tTQ\tTA\tTR\tTS\tTi\tTC\tTw\tTserv\n";
+
+    // We need to iterate the stack — depends on Stack implementation
+    // Assuming Stack has a way to iterate or we use a temp stack
+    Stack<Order*> temp;
+    while (!finishedOrders.isEmpty())
+    {
+        Order* o = finishedOrders.pop();
+        temp.push(o);
+
+        int Ti = (o->getTA() - o->getTQ()) + (o->getTS() - o->getTR());
+        int TC = o->getTR() - o->getTA();
+        int Tw = Ti + TC;
+        int Tserv = o->getTF() - o->getTS();
+
+        fout << o->getTF() << "\t"
+            << o->getID() << "\t"
+            << o->getTQ() << "\t"
+            << o->getTA() << "\t"
+            << o->getTR() << "\t"
+            << o->getTS() << "\t"
+            << Ti << "\t"
+            << TC << "\t"
+            << Tw << "\t"
+            << Tserv << "\n";
+    }
+
+    // Restore
+    while (!temp.isEmpty())
+        finishedOrders.push(temp.pop());
+
+    // TODO: statistics block (Feature 13 full)
+    fout << "\n--- Statistics ---\n";
+    fout << "Total finished : " << finishedOrders.getCount() << "\n";
+    fout << "Total cancelled: " << cancelledOrders.getCount() << "\n";
+
+    fout.close();
+    cout << "Output file created: output.txt\n";
+}
+
+/*
+==================================================
+Main Simulation Loop  [Feature 1]
+==================================================
+*/
+
+void Restaurant::simulate()
+{
+    // Ask user for mode
+    cout << "Select mode: (1) Interactive  (2) Silent\n> ";
+    int choice; cin >> choice;
+    interactiveMode = (choice == 1);
+
+    if (!interactiveMode)
+        cout << "Simulation Starts in Silent mode ...\n";
+
     int timestep = 1;
 
-    while (!allDone())
+    while (!allDone() && timestep < 5000)
     {
-        executeActions(timestep);
+        cout << "TS=" << timestep
+            << " pend=" << pendODG.getCount() + pendODN.getCount() + pendOT.getCount() + pendOVN.getCount() + pendOVC.getCount() + pendOVG.getCount()
+            << " cook=" << cooking.getCount()
+            << " ready=" << readyOT.getCount() + readyOV.getCount() + readyOD.getCount()
+            << " inSvc=" << inService.getCount()
+            << " req=" << requestList.getCount()
+            << endl;
 
+        // Feature 3 & 4: move due actions to pending lists / handle cancellations
+        processActions(timestep);
+
+        // Feature 8: assign pending orders to chefs
         assignToChefs(timestep);
 
+        // Feature 9: move done cooking orders to ready
         updateCooking(timestep);
 
+        // Features 10, 11, 12: assign ready orders to tables/scooters/takeaway
         moveReadyToService(timestep);
 
+        // Features 6 & 7: move finished in-service orders out
         moveInServiceToFinished(timestep);
 
+        // Feature 5: update scooter lists
         updateScooters(timestep);
 
         updateTables(timestep);
 
-        if (!pendOVC.isEmpty() && rand() % 5 == 0)
-            Cancel_Order(pendOVC.getRandomID());
+        if (interactiveMode)
+        {
+            ui.printTimestep(
+                timestep,
+                requestList, cancelList,
+                pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG,
+                freeCS, freeCN,
+                cooking,
+                readyOT, readyOV, readyOD,
+                freeScooters, freeTables,
+                inService,
+                maintenanceScooters, backScooters,
+                finishedOrders, cancelledOrders);
 
-        if (!readyOV.isEmpty() && rand() % 8 == 0) {
-            Order* f = readyOV.CancelAndReturn(readyOV.getRandomID());
-            if (f) cancelledOrders.enqueue(f);
+            cout << "\nPRESS ANY KEY TO MOVE TO NEXT STEP !\n";
+            cin.get();
         }
 
-        if (!cooking.isEmpty() && rand() % 10 == 0) {
-            Order* f = cooking.CancelAndReturn(cooking.getRandomID());
-            if (f) {
-                Chef* c = f->getChef();
-                if (c) {
-                    c->setBusy(false);
-                    if (c->getType() == "CS") freeCS.enqueue(c);
-                    else                       freeCN.enqueue(c);
-                }
-                cancelledOrders.enqueue(f);
-            }
-        }
-
-        ui.printTimestep(
-            timestep,
-
-            requestList,
-            cancelList,
-
-            pendODG,
-            pendODN,
-            pendOT,
-            pendOVN,
-            pendOVC,
-            pendOVG,
-
-            freeCS,
-            freeCN,
-
-            cooking,
-
-            readyOT,
-            readyOV,
-            readyOD,
-
-            freeScooters,
-            freeTables,
-
-            inService,
-
-            maintenanceScooters,
-            backScooters,
-
-            finishedOrders,
-            cancelledOrders
-        );
-
-        cin.get();
+        totalSimTime = timestep;
         timestep++;
     }
+
+    // Feature 13: always produce output file
+    generateOutputFile();
+
+    if (!interactiveMode)
+        cout << "Simulation ends, Output file created\n";
 }

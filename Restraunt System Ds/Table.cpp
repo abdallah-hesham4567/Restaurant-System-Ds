@@ -23,7 +23,8 @@ int Table::getFreeTime() const { return freeTime; }
 void Table::reserveSeats(int seats, int duration, int currentTime, bool share)
 {
     freeSeats -= seats;
-    sharable = share;
+    if (freeSeats == capacity)
+		sharable = share;                   
     freeTime = currentTime + duration;
 }
 

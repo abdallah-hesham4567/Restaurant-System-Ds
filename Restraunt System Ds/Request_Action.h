@@ -20,6 +20,8 @@ private:
     // Delivery only
     int distance;
 
+    Order* order;
+
 public:
 
     Request_Action(ORD_TYPE type, int time,
@@ -34,4 +36,8 @@ public:
     string getOrderType() const;
 
     void Act(Restaurant* pRest) override;
+
+
+    void setOrder(Order* o) { order = o; }
+    Order* getOrder() const { return order; }
 };

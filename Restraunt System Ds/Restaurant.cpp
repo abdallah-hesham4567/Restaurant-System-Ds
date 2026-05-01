@@ -330,64 +330,83 @@ Assign Orders To Chefs  [Feature 8]
 
 void Restaurant::assignToChefs(int timestep)
 {
-    int repeat = 30;
+    int attempts = 30;
 
-    while (repeat--)
+    while (attempts--)
     {
         Order* o = nullptr;
         Chef* c = nullptr;
 
+        // 1) ODG → CS only
         if (!pendODG.isEmpty() && !freeCS.isEmpty())
         {
             o = pendODG.dequeue();
             c = freeCS.dequeue();
         }
-        else if (!pendOVG.isEmpty() && !freeCS.isEmpty())
-        {
-            o = pendOVG.dequeue();
-            c = freeCS.dequeue();
-        }
+
+        // 2) ODN → CN then CS
         else if (!pendODN.isEmpty())
         {
             o = pendODN.dequeue();
-            if (!freeCN.isEmpty())      c = freeCN.dequeue();
-            else if (!freeCS.isEmpty()) c = freeCS.dequeue();
+
+            if (!freeCN.isEmpty())
+                c = freeCN.dequeue();
+            else if (!freeCS.isEmpty())
+                c = freeCS.dequeue();
         }
-        else if (!pendOVN.isEmpty() && !freeCN.isEmpty())
-        {
-            o = pendOVN.dequeue();
-            c = freeCN.dequeue();
-        }
-        else if (!pendOVC.isEmpty())
-        {
-            o = pendOVC.dequeue();
-            if (!freeCN.isEmpty())      c = freeCN.dequeue();
-            else if (!freeCS.isEmpty()) c = freeCS.dequeue();
-        }
+
+        // 3) OT → CN only
         else if (!pendOT.isEmpty() && !freeCN.isEmpty())
         {
             o = pendOT.dequeue();
             c = freeCN.dequeue();
         }
 
+        // 4) OVG → CS only
+        else if (!pendOVG.isEmpty() && !freeCS.isEmpty())
+        {
+            o = pendOVG.dequeue();
+            c = freeCS.dequeue();
+        }
+
+        // 5) OVC → CN then CS
+        else if (!pendOVC.isEmpty())
+        {
+            o = pendOVC.dequeue();
+
+            if (!freeCN.isEmpty())
+                c = freeCN.dequeue();
+            else if (!freeCS.isEmpty())
+                c = freeCS.dequeue();
+        }
+
+        // 6) OVN → CN only
+        else if (!pendOVN.isEmpty() && !freeCN.isEmpty())
+        {
+            o = pendOVN.dequeue();
+            c = freeCN.dequeue();
+        }
+
         if (!o || !c)
             break;
 
+        // assign
         o->setChef(c);
         o->setChefID(c->getID());
         o->setTA(timestep);
         o->setStatus(COOKING);
 
-        int finish = timestep + (o->getSize() / c->getSpeed()) + 1;
-        o->setFinishCookTime(finish);
+        int cookTime = ceil((double)o->getSize() / c->getSpeed());
+        int finishTime = timestep + cookTime;
+
+        o->setFinishCookTime(finishTime);
 
         c->setBusy(true);
-        c->addBusyTime(finish - timestep);
+        c->addBusyTime(cookTime);
 
-        cooking.enqueue(o, -finish);
+        cooking.enqueue(o, -finishTime);
     }
 }
-
 /*
 ==================================================
 Cooking Update  [Feature 9]
@@ -396,29 +415,41 @@ Cooking Update  [Feature 9]
 
 void Restaurant::updateCooking(int timestep)
 {
+    // Process all orders that finished cooking at this timestep
     while (!cooking.isEmpty())
     {
         Order* o = cooking.peek();
 
-        if (o->getFinishCookTime() <= timestep)
-        {
-            cooking.dequeue();
-
-            Chef* c = o->getChef();
-            c->setBusy(false);
-
-            if (c->getType() == "CS")
-                freeCS.enqueue(c);
-            else
-                freeCN.enqueue(c);
-
-            o->setTR(timestep);
-            o->setStatus(READY);
-
-            moveToReady(o);
-        }
-        else
+        // If the first order is not finished yet → stop
+        // (because queue is sorted by finish time)
+        if (o->getFinishCookTime() > timestep)
             break;
+
+        // Remove order from cooking list
+        cooking.dequeue();
+
+        // =========================
+        // Free the assigned chef
+        // =========================
+        Chef* c = o->getChef();
+        c->setBusy(false);
+
+        // Return chef to correct free list
+        if (c->getType() == "CS")
+            freeCS.enqueue(c);
+        else
+            freeCN.enqueue(c);
+
+        // =========================
+        // Update order state
+        // =========================
+        o->setTR(timestep);     // Ready time
+        o->setStatus(READY);
+
+        // =========================
+        // Move to READY lists
+        // =========================
+        moveToReady(o);
     }
 }
 
@@ -434,6 +465,7 @@ void Restaurant::moveInServiceToFinished(int timestep)
     {
         Order* o = inService.peek();
 
+        // If not finished yet → stop
         if (o->getFinishServiceTime() > timestep)
             break;
 
@@ -442,19 +474,54 @@ void Restaurant::moveInServiceToFinished(int timestep)
         o->setTF(timestep);
         o->setStatus(FINISHED_S);
 
+        // =========================
+        // DINE-IN ORDERS 
+        // =========================
         if (o->isDineIn())
         {
             Table* t = o->getTable();
-            freeTables.enqueue(t, -t->getCapacity());
+
+            // MUST: release seats first
+            Table* t = o->getTable();
+
+            // 1) Remove table from any busy list first
+            busy_sharable.removeTable(t->getID());
+            busy_noshare.removeTable(t->getID());
+
+            // 2) Release seats
+            t->releaseSeats(o->getSeats());
+
+            // 3) Reinsert in correct place
+            if (t->getFreeSeats() == t->getCapacity())
+            {
+                freeTables.enqueue(t, -t->getCapacity());
+            }
+            else
+            {
+                if (t->isSharable())
+                    busy_sharable.enqueue(t, -t->getFreeSeats());
+                else
+                    busy_noshare.enqueue(t, -t->getFreeSeats());
+            }
         }
+
+        // =========================
+        // DELIVERY ORDERS 
+        // =========================
         else if (o->isDelivery())
         {
             Scooter* s = o->getScooter();
-            int back = timestep + (o->getDistance() / s->getSpeed()) + 1;
-            s->setReturnTime(back);
-            backScooters.enqueue(s, -back);
+
+            int backTime = timestep + ceil((double)o->getDistance() / s->getSpeed());
+
+            s->setReturnTime(backTime);
+
+            backScooters.enqueue(s, -backTime);
         }
 
+        // =========================
+        // FINISH
+        // =========================
         finishedOrders.push(o);
     }
 }

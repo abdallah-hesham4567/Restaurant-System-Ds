@@ -343,7 +343,7 @@ void Restaurant::assignToChefs(int timestep)
             o = pendODG.dequeue();
             c = freeCS.dequeue();
         }
-        else if (!pendOVG.isEmpty() && !freeCS.isEmpty())
+        else if (!pendODN.isEmpty() && !freeCS.isEmpty())
         {
             o = pendODN.dequeue();
 
@@ -477,9 +477,34 @@ void Restaurant::moveInServiceToFinished(int timestep)
         // =========================
         if (o->isDineIn())
         {
+          
+            // MUST: release seats first
             Table* t = o->getTable();
-            freeTables.enqueue(t, -t->getCapacity());
+
+            // 1) Remove table from any busy list first
+            busy_sharable.removeTable(t->getID());
+            busy_noshare.removeTable(t->getID());
+
+            // 2) Release seats
+            t->releaseSeats(o->getSeats());
+
+            // 3) Reinsert in correct place
+            if (t->getFreeSeats() == t->getCapacity())
+            {
+                freeTables.enqueue(t, -t->getCapacity());
+            }
+            else
+            {
+                if (t->isSharable())
+                    busy_sharable.enqueue(t, -t->getFreeSeats());
+                else
+                    busy_noshare.enqueue(t, -t->getFreeSeats());
+            }
         }
+
+        // =========================
+        // DELIVERY ORDERS 
+        // =========================
         else if (o->isDelivery())
         {
             Scooter* s = o->getScooter();
@@ -556,7 +581,7 @@ void Restaurant::moveReadyToService(int timestep)
         o->setTS(timestep);
         o->setStatus(INSERVICE);
 
-        int finish = timestep + (o->getDistance() / s->getSpeed()) + 1;
+		int finish = timestep + (o->getDistance() / s->getSpeed()) + 1;  // +1 for handing over the order
         o->setFinishServiceTime(finish);
 
         s->incrementOrders();

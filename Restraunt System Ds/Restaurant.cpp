@@ -722,7 +722,7 @@ void Restaurant::simulate()
 
     int timestep = 1;
 
-    while (!allDone() && timestep < 5000)
+    while (!allDone() && timestep < 1000)
     {
         cout << "TS=" << timestep
             << " pend=" << pendODG.getCount() + pendODN.getCount() + pendOT.getCount() + pendOVN.getCount() + pendOVC.getCount() + pendOVG.getCount()

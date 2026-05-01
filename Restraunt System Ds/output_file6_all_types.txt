@@ -1,0 +1,32 @@
+Finished Orders (sorted by TF descending):
+  TF   ID   TQ   TA   TR   TS   Ti   TC   Tw Tserv
+  22   10    5    5    7    7    0    2    2    15
+  22   11    6    7   10   16    7    3   10     6
+  20   12    6    8   10   17    9    2   11     3
+  16    4    2    2    4    4    0    2    2    12
+  16    9    5    5    8    8    0    3    3     8
+  16   15    8    8   10   10    0    2    2     6
+  15    6    3    5    7   11    6    2    8     4
+  14    3    2    2    4    4    0    2    2    10
+  13   14    7    7    9   11    2    2    4     2
+  12    7    4    9   11   11    5    2    7     1
+  12   13    7   10   11   11    3    1    4     1
+  11    5    3    3    6    6    0    3    3     5
+   8    8    4    4    6    6    0    2    2     2
+   7    2    1    1    4    4    0    3    3     3
+   4    1    1    1    3    3    0    2    2     1
+
+--- Statistics ---
+Total orders        : 15
+  ODG:2  ODN:3  OT:3  OVN:3  OVC:2  OVG:2
+Total chefs         : 5  (CS:2  CN:3)
+Total scooters      : 3
+Finished orders     : 15  (100.0%)
+Cancelled orders    : 0  (0.0%)
+Avg Ti              : 2.13
+Avg TC              : 2.20
+Avg Tw              : 4.33
+Avg Tserv           : 5.27
+Chef utilization    : 30.0%
+Scooter utilization : 27.3%
+Total sim time      : 22

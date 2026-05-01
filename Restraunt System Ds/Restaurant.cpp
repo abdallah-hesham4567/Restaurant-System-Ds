@@ -1,5 +1,5 @@
 ﻿#include "Restaurant.h"
-
+#include <iomanip>
 /*
 ==================================================
 Constructor
@@ -342,6 +342,7 @@ void Restaurant::assignToChefs(int timestep)
             o = pendODG.dequeue();
             c = freeCS.dequeue();
         }
+
         else if (!pendOVG.isEmpty() && !freeCS.isEmpty())
         {
             o = pendOVG.dequeue();
@@ -445,8 +446,21 @@ void Restaurant::moveInServiceToFinished(int timestep)
         if (o->isDineIn())
         {
             Table* t = o->getTable();
-            freeTables.enqueue(t, -t->getCapacity());
+            t->releaseSeats(o->getSeats());  // release only THIS order's seats
+
+            if (t->getFreeSeats() == t->getCapacity())
+            {
+                // Table fully empty → return to free
+                freeTables.enqueue(t, -t->getCapacity());
+            }
+            else if (t->isSharable())
+            {
+                // Still has other orders sharing → back to busy_sharable
+                busy_sharable.enqueue(t, -t->getFreeSeats());
+            }
+            // if not sharable and not empty → leave it out until fully done
         }
+
         else if (o->isDelivery())
         {
             Scooter* s = o->getScooter();
@@ -595,43 +609,102 @@ void Restaurant::generateOutputFile()
 {
     ofstream fout("output.txt");
 
-    // Print finished orders sorted by TF descending (stack is LIFO = descending push order)
-    fout << "Finished Orders (sorted by TF descending):\n";
-    fout << "TF\tID\tTQ\tTA\tTR\tTS\tTi\tTC\tTw\tTserv\n";
-
-    // We need to iterate the stack — depends on Stack implementation
-    // Assuming Stack has a way to iterate or we use a temp stack
+    // collect all finished into temp + compute stats while iterating
     Stack<Order*> temp;
+    int finCount = 0;
+    double sumTi = 0, sumTC = 0, sumTw = 0, sumTserv = 0;
+    int cntODG = 0, cntODN = 0, cntOT = 0, cntOVN = 0, cntOVC = 0, cntOVG = 0;
+
+    fout << "Finished Orders (sorted by TF descending):\n";
+    fout << left
+        << setw(6) << "TF"
+        << setw(6) << "ID"
+        << setw(6) << "TQ"
+        << setw(6) << "TA"
+        << setw(6) << "TR"
+        << setw(6) << "TS"
+        << setw(6) << "Ti"
+        << setw(6) << "TC"
+        << setw(6) << "Tw"
+        << setw(8) << "Tserv"
+        << "\n";
+
     while (!finishedOrders.isEmpty())
     {
         Order* o = finishedOrders.pop();
         temp.push(o);
+        finCount++;
 
-        int Ti = (o->getTA() - o->getTQ()) + (o->getTS() - o->getTR());
-        int TC = o->getTR() - o->getTA();
+        int TQ = o->getTQ();
+        int TA = o->getTA();
+        int TR = o->getTR();
+        int TS = o->getTS();
+        int TF = o->getTF();
+
+        int Ti = (TA - TQ) + (TS - TR);
+        int TC = TR - TA;
         int Tw = Ti + TC;
-        int Tserv = o->getTF() - o->getTS();
+        int Tserv = TF - TS;
 
-        fout << o->getTF() << "\t"
-            << o->getID() << "\t"
-            << o->getTQ() << "\t"
-            << o->getTA() << "\t"
-            << o->getTR() << "\t"
-            << o->getTS() << "\t"
-            << Ti << "\t"
-            << TC << "\t"
-            << Tw << "\t"
-            << Tserv << "\n";
+        sumTi += Ti;
+        sumTC += TC;
+        sumTw += Tw;
+        sumTserv += Tserv;
+
+        ORD_TYPE t = o->getType();
+        if (t == ODG) cntODG++;
+        else if (t == ODN) cntODN++;
+        else if (t == OT)  cntOT++;
+        else if (t == OVN) cntOVN++;
+        else if (t == OVC) cntOVC++;
+        else if (t == OVG) cntOVG++;
+
+        fout << left
+            << setw(6) << TF
+            << setw(6) << o->getID()
+            << setw(6) << TQ
+            << setw(6) << TA
+            << setw(6) << TR
+            << setw(6) << TS
+            << setw(6) << Ti
+            << setw(6) << TC
+            << setw(6) << Tw
+            << setw(8) << Tserv
+            << "\n";
     }
 
-    // Restore
+    // restore stack
     while (!temp.isEmpty())
         finishedOrders.push(temp.pop());
 
-    // TODO: statistics block (Feature 13 full)
+    int canCount = cancelledOrders.getCount();
+    int total = finCount + canCount;
+
+    // chef busy time
+    int csBusy = 0, cnBusy = 0;
+    // iterate free chefs (all chefs are free at end of sim)
+    Node<Chef*>* cur = freeCS.getFront();
+    while (cur) { csBusy += cur->item->getBusyTime(); cur = cur->next; }
+    cur = freeCN.getFront();
+    while (cur) { cnBusy += cur->item->getBusyTime(); cur = cur->next; }
+    int totalChefBusy = csBusy + cnBusy;
+    int totalChefs = csCount + cnCount;
+    double chefUtil = totalChefs > 0 && totalSimTime > 0
+        ? (totalChefBusy * 100.0) / (totalSimTime * totalChefs) : 0;
+
     fout << "\n--- Statistics ---\n";
-    fout << "Total finished : " << finishedOrders.getCount() << "\n";
-    fout << "Total cancelled: " << cancelledOrders.getCount() << "\n";
+    fout << "Total orders     : " << total << "\n";
+    fout << "Finished orders  : " << finCount << "\n";
+    fout << "Cancelled orders : " << canCount << "\n";
+    fout << "\nOrders per type:\n";
+    fout << "  ODG:" << cntODG << "  ODN:" << cntODN << "  OT:" << cntOT
+        << "  OVN:" << cntOVN << "  OVC:" << cntOVC << "  OVG:" << cntOVG << "\n";
+    fout << "\nAvg waiting time (Ti)   : " << fixed << setprecision(2) << (finCount ? sumTi / finCount : 0) << "\n";
+    fout << "Avg cooking time (TC)   : " << fixed << setprecision(2) << (finCount ? sumTC / finCount : 0) << "\n";
+    fout << "Avg total wait   (Tw)   : " << fixed << setprecision(2) << (finCount ? sumTw / finCount : 0) << "\n";
+    fout << "Avg service time (Tserv): " << fixed << setprecision(2) << (finCount ? sumTserv / finCount : 0) << "\n";
+    fout << "Chef utilization        : " << fixed << setprecision(1) << chefUtil << "%\n";
+    fout << "Total simulation time   : " << totalSimTime << "\n";
 
     fout.close();
     cout << "Output file created: output.txt\n";
@@ -655,7 +728,7 @@ void Restaurant::simulate()
 
     int timestep = 1;
 
-    while (!allDone() && timestep < 1000)
+    while (!allDone())
     {
         cout << "TS=" << timestep
             << " pend=" << pendODG.getCount() + pendODN.getCount() + pendOT.getCount() + pendOVN.getCount() + pendOVC.getCount() + pendOVG.getCount()

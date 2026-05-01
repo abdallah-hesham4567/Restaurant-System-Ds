@@ -330,21 +330,24 @@ Assign Orders To Chefs  [Feature 8]
 
 void Restaurant::assignToChefs(int timestep)
 {
-    int attempts = 30;
-
-    while (attempts--)
+    // Keep assigning as long as possible
+    while (true)
     {
         Order* o = nullptr;
         Chef* c = nullptr;
 
+        // ===============================
         // 1) ODG → CS only
+        // ===============================
         if (!pendODG.isEmpty() && !freeCS.isEmpty())
         {
             o = pendODG.dequeue();
             c = freeCS.dequeue();
         }
 
+        // ===============================
         // 2) ODN → CN then CS
+        // ===============================
         else if (!pendODN.isEmpty())
         {
             o = pendODN.dequeue();
@@ -355,21 +358,27 @@ void Restaurant::assignToChefs(int timestep)
                 c = freeCS.dequeue();
         }
 
+        // ===============================
         // 3) OT → CN only
+        // ===============================
         else if (!pendOT.isEmpty() && !freeCN.isEmpty())
         {
             o = pendOT.dequeue();
             c = freeCN.dequeue();
         }
 
+        // ===============================
         // 4) OVG → CS only
+        // ===============================
         else if (!pendOVG.isEmpty() && !freeCS.isEmpty())
         {
             o = pendOVG.dequeue();
             c = freeCS.dequeue();
         }
 
+        // ===============================
         // 5) OVC → CN then CS
+        // ===============================
         else if (!pendOVC.isEmpty())
         {
             o = pendOVC.dequeue();
@@ -380,76 +389,39 @@ void Restaurant::assignToChefs(int timestep)
                 c = freeCS.dequeue();
         }
 
+        // ===============================
         // 6) OVN → CN only
+        // ===============================
         else if (!pendOVN.isEmpty() && !freeCN.isEmpty())
         {
             o = pendOVN.dequeue();
             c = freeCN.dequeue();
         }
 
+        //  stop when no valid pair
         if (!o || !c)
             break;
 
-        // assign
+        // ===============================
+        // Assign order to chef
+        // ===============================
         o->setChef(c);
         o->setChefID(c->getID());
         o->setTA(timestep);
         o->setStatus(COOKING);
 
+        // Calculate cooking time correctly
         int cookTime = ceil((double)o->getSize() / c->getSpeed());
         int finishTime = timestep + cookTime;
 
         o->setFinishCookTime(finishTime);
 
+        // Update chef
         c->setBusy(true);
         c->addBusyTime(cookTime);
 
+        // Add to cooking list (earliest finish first)
         cooking.enqueue(o, -finishTime);
-    }
-}
-/*
-==================================================
-Cooking Update  [Feature 9]
-==================================================
-*/
-
-void Restaurant::updateCooking(int timestep)
-{
-    // Process all orders that finished cooking at this timestep
-    while (!cooking.isEmpty())
-    {
-        Order* o = cooking.peek();
-
-        // If the first order is not finished yet → stop
-        // (because queue is sorted by finish time)
-        if (o->getFinishCookTime() > timestep)
-            break;
-
-        // Remove order from cooking list
-        cooking.dequeue();
-
-        // =========================
-        // Free the assigned chef
-        // =========================
-        Chef* c = o->getChef();
-        c->setBusy(false);
-
-        // Return chef to correct free list
-        if (c->getType() == "CS")
-            freeCS.enqueue(c);
-        else
-            freeCN.enqueue(c);
-
-        // =========================
-        // Update order state
-        // =========================
-        o->setTR(timestep);     // Ready time
-        o->setStatus(READY);
-
-        // =========================
-        // Move to READY lists
-        // =========================
-        moveToReady(o);
     }
 }
 

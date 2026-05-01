@@ -1,10 +1,10 @@
 Finished Orders (sorted by TF descending):
 TF    ID    TQ    TA    TR    TS    Ti    TC    Tw    Tserv   
-10    5     7     7     9     9     0     2     2     1       
+9     5     7     7     8     8     0     1     1     1       
 8     4     5     5     7     7     0     2     2     1       
-7     3     3     4     6     6     1     2     3     1       
-5     2     1     1     4     4     0     3     3     1       
-4     1     1     1     3     3     0     2     2     1       
+5     3     3     3     4     4     0     1     1     1       
+4     2     1     1     3     3     0     2     2     1       
+3     1     1     1     2     2     0     1     1     1       
 
 --- Statistics ---
 Total orders     : 5
@@ -14,9 +14,9 @@ Cancelled orders : 0
 Orders per type:
   ODG:0  ODN:0  OT:5  OVN:0  OVC:0  OVG:0
 
-Avg waiting time (Ti)   : 0.20
-Avg cooking time (TC)   : 2.20
-Avg total wait   (Tw)   : 2.40
+Avg waiting time (Ti)   : 0.00
+Avg cooking time (TC)   : 1.40
+Avg total wait   (Tw)   : 1.40
 Avg service time (Tserv): 1.00
-Chef utilization        : 40.7%
-Total simulation time   : 9
+Chef utilization        : 29.2%
+Total simulation time   : 8

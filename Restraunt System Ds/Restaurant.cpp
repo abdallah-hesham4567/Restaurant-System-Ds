@@ -425,6 +425,21 @@ void Restaurant::assignToChefs(int timestep)
     }
 }
 
+void Restaurant::updateCooking(int timestep)
+{
+
+    while (!cooking.isEmpty())
+    {
+        Order* o = cooking.peek();
+        // If not done cooking yet → stop
+        if (o->getFinishCookTime() > timestep)
+            break;
+        cooking.dequeue();
+        moveToReady(o);
+	}
+
+}
+
 /*
 ==================================================
 Move InService -> Finished  [Feature 6 & 7]

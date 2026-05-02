@@ -96,8 +96,8 @@ private:
 
     // --- Phase 2 internal steps ---
     void processActions(int timestep);   // Feature 3 & 4
-    void assignToChefs(int timestep);    // Feature 8
-    void updateCooking(int timestep);    // Feature 9
+    void MovePendingToCooking(int timestep);    // Feature 8
+    void MoveCookingToReady(int timestep);    // Feature 9
     void moveReadyToService(int timestep);       // Features 10,11,12
     void moveInServiceToFinished(int timestep);  // Features 6 & 7
     void updateScooters(int timestep);   // Feature 5

@@ -328,7 +328,7 @@ Assign Orders To Chefs  [Feature 8]
 ==================================================
 */
 
-void Restaurant::assignToChefs(int timestep)
+void Restaurant::MovePendingToCooking(int timestep)
 {
     // Keep assigning as long as possible
     while (true)
@@ -425,19 +425,36 @@ void Restaurant::assignToChefs(int timestep)
     }
 }
 
-void Restaurant::updateCooking(int timestep)
+void Restaurant::MoveCookingToReady(int timestep)
 {
-
+    // Move all finished cooking orders to READY
     while (!cooking.isEmpty())
     {
         Order* o = cooking.peek();
-        // If not done cooking yet → stop
+
+        // Not finished yet → stop
         if (o->getFinishCookTime() > timestep)
             break;
-        cooking.dequeue();
-        moveToReady(o);
-	}
 
+        // Remove from cooking
+        cooking.dequeue();
+
+        // Release chef
+        Chef* c = o->getChef();
+        c->setBusy(false);
+
+        if (c->getType() == "CS")
+            freeCS.enqueue(c);
+        else
+            freeCN.enqueue(c);
+
+        // Update order
+        o->setTR(timestep);
+        o->setStatus(READY);
+
+        // Move to appropriate READY list
+        moveToReady(o);
+    }
 }
 
 /*
@@ -466,8 +483,15 @@ void Restaurant::moveInServiceToFinished(int timestep)
         // =========================
         if (o->isDineIn())
         {
-            Table* t = o->getTable();
-            freeTables.enqueue(t, -t->getCapacity());
+			Table* t = o->getTable();
+			// Release seats
+			t->releaseSeats(o->getSeats());
+			
+			// If table is empty, put in free list; else put in appropriate busy list
+			if (t->getFreeSeats() == t->getCapacity())
+                	freeTables.enqueue(t, -t->getFreeSeats());
+            else 
+				busy_sharable.enqueue(t, -t->getFreeSeats()); // 
         }
         else if (o->isDelivery())
         {
@@ -756,10 +780,10 @@ void Restaurant::simulate()
         processActions(timestep);
 
         // Feature 8: assign pending orders to chefs
-        assignToChefs(timestep);
+        MovePendingToCooking(timestep);
 
         // Feature 9: move done cooking orders to ready
-        updateCooking(timestep);
+        MoveCookingToReady(timestep);
 
         // Features 10, 11, 12: assign ready orders to tables/scooters/takeaway
         moveReadyToService(timestep);

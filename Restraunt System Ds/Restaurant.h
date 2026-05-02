@@ -73,6 +73,13 @@ private:
     Stack<Order*>        finishedOrders;
     LinkedQueue<Order*>  cancelledOrders;
 
+	//// bonus part
+    PriQueue<Order*> rescueInService;  // orders being rescued, key=new finish time
+    double failProbability;            // read from file e.g. 0.05 // static data
+
+
+
+
     // Config
     int csCount, cnCount;
     int csSpeed, cnSpeed;
@@ -121,4 +128,9 @@ public:
 
     // Feature 1 - main simulation loop
     void simulate();
+
+
+	//bonus part
+	void checkRescue(int timestep);
+
 };

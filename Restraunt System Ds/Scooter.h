@@ -19,6 +19,12 @@ private:
     int returnTime;
     int maintenanceEnd;
 
+
+/// /////// bonus part
+    bool failed;
+    int failTime;
+    double distanceCovered;  // how far before failure
+
 public:
 
     Scooter(int ID, double sp, int mOrders, int mDuration);
@@ -41,4 +47,11 @@ public:
     bool needsMaintenance() const;
 
     friend ostream& operator<<(ostream& out, Scooter* s);
+
+
+	/////bonus part
+    void setFailed(int time, double covered);
+    bool hasFailed() const;
+    double getDistanceCovered() const;
+    void resetFailed();
 };

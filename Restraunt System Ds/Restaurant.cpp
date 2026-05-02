@@ -328,22 +328,23 @@ Assign Orders To Chefs  [Feature 8]
 ==================================================
 */
 
-void Restaurant::assignToChefs(int timestep)
+void Restaurant::MovePendingToCooking(int timestep)
 {
-    int attempts = 30;
-
-    while (attempts--)
+    // Keep assigning as long as possible
+    while (true)
     {
         Order* o = nullptr;
         Chef* c = nullptr;
 
+        // ===============================
         // 1) ODG → CS only
+        // ===============================
         if (!pendODG.isEmpty() && !freeCS.isEmpty())
         {
             o = pendODG.dequeue();
             c = freeCS.dequeue();
         }
-        else if (!pendODN.isEmpty() && !freeCS.isEmpty())
+        else if (!pendOVG.isEmpty() && !freeCS.isEmpty())
         {
             o = pendODN.dequeue();
 
@@ -353,21 +354,27 @@ void Restaurant::assignToChefs(int timestep)
                 c = freeCS.dequeue();
         }
 
+        // ===============================
         // 3) OT → CN only
+        // ===============================
         else if (!pendOT.isEmpty() && !freeCN.isEmpty())
         {
             o = pendOT.dequeue();
             c = freeCN.dequeue();
         }
 
+        // ===============================
         // 4) OVG → CS only
+        // ===============================
         else if (!pendOVG.isEmpty() && !freeCS.isEmpty())
         {
             o = pendOVG.dequeue();
             c = freeCS.dequeue();
         }
 
+        // ===============================
         // 5) OVC → CN then CS
+        // ===============================
         else if (!pendOVC.isEmpty())
         {
             o = pendOVC.dequeue();
@@ -378,75 +385,70 @@ void Restaurant::assignToChefs(int timestep)
                 c = freeCS.dequeue();
         }
 
+        // ===============================
         // 6) OVN → CN only
+        // ===============================
         else if (!pendOVN.isEmpty() && !freeCN.isEmpty())
         {
             o = pendOVN.dequeue();
             c = freeCN.dequeue();
         }
 
+        //  stop when no valid pair
         if (!o || !c)
             break;
 
-        // assign
+        // ===============================
+        // Assign order to chef
+        // ===============================
         o->setChef(c);
         o->setChefID(c->getID());
         o->setTA(timestep);
         o->setStatus(COOKING);
 
+        // Calculate cooking time correctly
         int cookTime = ceil((double)o->getSize() / c->getSpeed());
         int finishTime = timestep + cookTime;
 
         o->setFinishCookTime(finishTime);
 
+        // Update chef
         c->setBusy(true);
         c->addBusyTime(cookTime);
 
+        // Add to cooking list (earliest finish first)
         cooking.enqueue(o, -finishTime);
     }
 }
-/*
-==================================================
-Cooking Update  [Feature 9]
-==================================================
-*/
 
-void Restaurant::updateCooking(int timestep)
+void Restaurant::MoveCookingToReady(int timestep)
 {
-    // Process all orders that finished cooking at this timestep
+    // Move all finished cooking orders to READY
     while (!cooking.isEmpty())
     {
         Order* o = cooking.peek();
 
-        // If the first order is not finished yet → stop
-        // (because queue is sorted by finish time)
+        // Not finished yet → stop
         if (o->getFinishCookTime() > timestep)
             break;
 
-        // Remove order from cooking list
+        // Remove from cooking
         cooking.dequeue();
 
-        // =========================
-        // Free the assigned chef
-        // =========================
+        // Release chef
         Chef* c = o->getChef();
         c->setBusy(false);
 
-        // Return chef to correct free list
         if (c->getType() == "CS")
             freeCS.enqueue(c);
         else
             freeCN.enqueue(c);
 
-        // =========================
-        // Update order state
-        // =========================
-        o->setTR(timestep);     // Ready time
+        // Update order
+        o->setTR(timestep);
         o->setStatus(READY);
 
-        // =========================
-        // Move to READY lists
-        // =========================
+        // Move to appropriate READY list
         moveToReady(o);
     }
 }
@@ -477,34 +479,9 @@ void Restaurant::moveInServiceToFinished(int timestep)
         // =========================
         if (o->isDineIn())
         {
-          
-            // MUST: release seats first
             Table* t = o->getTable();
-
-            // 1) Remove table from any busy list first
-            busy_sharable.removeTable(t->getID());
-            busy_noshare.removeTable(t->getID());
-
-            // 2) Release seats
-            t->releaseSeats(o->getSeats());
-
-            // 3) Reinsert in correct place
-            if (t->getFreeSeats() == t->getCapacity())
-            {
-                freeTables.enqueue(t, -t->getCapacity());
-            }
-            else
-            {
-                if (t->isSharable())
-                    busy_sharable.enqueue(t, -t->getFreeSeats());
-                else
-                    busy_noshare.enqueue(t, -t->getFreeSeats());
-            }
+            freeTables.enqueue(t, -t->getCapacity());
         }
-
-        // =========================
-        // DELIVERY ORDERS 
-        // =========================
         else if (o->isDelivery())
         {
             Scooter* s = o->getScooter();
@@ -778,7 +755,7 @@ void Restaurant::simulate()
 
     int timestep = 1;
 
-    while (!allDone())
+    while (!allDone() )
     {
         cout << "TS=" << timestep
             << " pend=" << pendODG.getCount() + pendODN.getCount() + pendOT.getCount() + pendOVN.getCount() + pendOVC.getCount() + pendOVG.getCount()
@@ -792,10 +769,10 @@ void Restaurant::simulate()
         processActions(timestep);
 
         // Feature 8: assign pending orders to chefs
-        assignToChefs(timestep);
+        MovePendingToCooking(timestep);
 
         // Feature 9: move done cooking orders to ready
-        updateCooking(timestep);
+        MoveCookingToReady(timestep);
 
         // Features 10, 11, 12: assign ready orders to tables/scooters/takeaway
         moveReadyToService(timestep);

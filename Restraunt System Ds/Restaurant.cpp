@@ -480,7 +480,18 @@ void Restaurant::moveInServiceToFinished(int timestep)
         if (o->isDineIn())
         {
             Table* t = o->getTable();
-            freeTables.enqueue(t, -t->getCapacity());
+
+			t->releaseSeats(o->getSeats());
+			// If now is empty, move to free
+            if (t->getFreeSeats() == t->getCapacity())
+            
+                freeTables.enqueue(t, -t->getFreeSeats());
+			// If still has free seats, put back in the  busy_sharable list
+            else 
+            
+                busy_sharable.enqueue(t, -t->getFreeSeats());
+            
+			
         }
         else if (o->isDelivery())
         {

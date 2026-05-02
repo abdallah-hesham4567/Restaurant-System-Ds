@@ -485,7 +485,7 @@ void Restaurant::moveInServiceToFinished(int timestep)
         else if (o->isDelivery())
         {
             Scooter* s = o->getScooter();
-
+            s->incrementOrders();
             int backTime = timestep + ceil((double)o->getDistance() / s->getSpeed());
 
             s->setReturnTime(backTime);
@@ -561,7 +561,7 @@ void Restaurant::moveReadyToService(int timestep)
 		int finish = timestep + (o->getDistance() / s->getSpeed()) + 1;  // +1 for handing over the order
         o->setFinishServiceTime(finish);
 
-        s->incrementOrders();
+       
         s->addDistance(o->getDistance());
 
         inService.enqueue(o, -finish);
@@ -598,7 +598,10 @@ void Restaurant::updateScooters(int timestep)
             backScooters.dequeue();
 
             if (s->needsMaintenance())
+            {
+                s->setMaintenanceEnd(timestep + maintDuration);
                 maintenanceScooters.enqueue(s);
+            }
             else
                 freeScooters.enqueue(s, -(int)s->getDistanceCut());
         }
@@ -777,9 +780,13 @@ void Restaurant::simulate()
         // Features 10, 11, 12: assign ready orders to tables/scooters/takeaway
         moveReadyToService(timestep);
 
+
+        // bonus
+        checkRescue(timestep);
         // Features 6 & 7: move finished in-service orders out
         moveInServiceToFinished(timestep);
 
+        
         // Feature 5: update scooter lists
         updateScooters(timestep);
 
@@ -812,4 +819,69 @@ void Restaurant::simulate()
 
     if (!interactiveMode)
         cout << "Simulation ends, Output file created\n";
+}
+
+
+//bonus part
+void Restaurant::checkRescue(int timestep)
+{
+    // Only check every 5 timesteps
+    if (timestep % 5 != 0) return;
+
+    if (freeScooters.isEmpty()) return;
+
+    LinkedQueue<Order*> tempList;
+    while (!inService.isEmpty())
+    {
+        Order* o = inService.peek();
+        inService.dequeue();
+        tempList.enqueue(o);
+    }
+
+    while (!tempList.isEmpty())
+    {
+        Order* o = tempList.dequeue();
+
+        if (o->isDelivery() &&
+            o->getScooter() != nullptr &&
+            !o->getScooter()->hasFailed() &&
+            !freeScooters.isEmpty())
+        {
+            double roll = (rand() % 1000) / 1000.0;
+			// if (roll < failProbability)  // use it as a random failure trigger if you want non-deterministic failures
+			if (false)  // for testing, force a failure every 5 timesteps if there's a free scooter to rescue with
+            {
+                Scooter* failed = o->getScooter();
+
+                int elapsed = timestep - o->getTS();
+                double covered = elapsed * failed->getSpeed();
+                double remaining = o->getDistance() - covered;
+                if (remaining < 0) remaining = 0;
+
+                failed->setFailed(timestep, covered);
+                int failedBack = timestep + (int)(covered / failed->getSpeed()) + 1;
+                failed->setReturnTime(failedBack);
+                backScooters.enqueue(failed, -failedBack);
+
+                Scooter* rescue = freeScooters.dequeue();
+                int rescueArrival = timestep + (int)(covered / rescue->getSpeed()) + 1;
+                int newFinish = rescueArrival + (int)(remaining / rescue->getSpeed()) + 1;
+
+                o->setScooter(rescue);
+                o->setScooterID(rescue->getID());
+                o->setFinishServiceTime(newFinish);
+
+                rescue->incrementOrders();
+                rescue->addDistance(o->getDistance());
+
+                // Only print when rescue actually happens
+                cout << "[RESCUE] TS=" << timestep
+                    << " S" << failed->getID() << " failed!"
+                    << " S" << rescue->getID()
+                    << " rescuing Order " << o->getID()
+                    << " -> new finish=" << newFinish << "\n";
+            }
+        }
+        inService.enqueue(o, -o->getFinishServiceTime());
+    }
 }

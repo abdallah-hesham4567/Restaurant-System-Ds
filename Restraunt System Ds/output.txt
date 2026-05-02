@@ -1,40 +1,29 @@
 Finished Orders (sorted by TF descending):
 TF    ID    TQ    TA    TR    TS    Ti    TC    Tw    Tserv   
-<<<<<<< HEAD
-10    5     7     7     9     9     0     2     2     1       
-8     4     5     5     7     7     0     2     2     1       
-7     3     3     4     6     6     1     2     3     1       
-5     2     1     1     4     4     0     3     3     1       
-4     1     1     1     3     3     0     2     2     1       
-=======
-34    6     15    15    16    32    16    1     17    2       
-30    5     15    15    16    28    12    1     13    2       
-21    4     5     5     6     19    13    1     14    2       
-17    3     5     5     6     15    9     1     10    2       
-8     2     1     1     2     6     4     1     5     2       
-4     1     1     1     2     2     0     1     1     2       
->>>>>>> try
+57    12    4     11    13    50    44    2     46    7       
+45    6     2     8     10    36    32    2     34    9       
+42    10    4     7     10    29    22    3     25    13      
+29    11    4     5     8     8     1     3     4     21      
+20    5     2     2     4     4     0     2     2     16      
+18    4     2     4     7     7     2     3     5     11      
+11    7     3     4     6     6     1     2     3     5       
+9     8     3     5     6     6     2     1     3     3       
+8     1     1     1     3     3     0     2     2     5       
+7     2     1     1     3     3     0     2     2     4       
+5     9     3     3     4     4     0     1     1     1       
+3     3     1     1     2     2     0     1     1     1       
 
 --- Statistics ---
-Total orders     : 6
-Finished orders  : 6
+Total orders     : 12
+Finished orders  : 12
 Cancelled orders : 0
 
 Orders per type:
-  ODG:0  ODN:0  OT:0  OVN:6  OVC:0  OVG:0
+  ODG:2  ODN:2  OT:2  OVN:2  OVC:2  OVG:2
 
-<<<<<<< HEAD
-Avg waiting time (Ti)   : 0.20
-Avg cooking time (TC)   : 2.20
-Avg total wait   (Tw)   : 2.40
-Avg service time (Tserv): 1.00
-Chef utilization        : 40.7%
-Total simulation time   : 9
-=======
-Avg waiting time (Ti)   : 9.00
-Avg cooking time (TC)   : 1.00
-Avg total wait   (Tw)   : 10.00
-Avg service time (Tserv): 2.00
-Chef utilization        : 5.9%
-Total simulation time   : 34
->>>>>>> try
+Avg waiting time (Ti)   : 8.67
+Avg cooking time (TC)   : 2.00
+Avg total wait   (Tw)   : 10.67
+Avg service time (Tserv): 8.00
+Chef utilization        : 10.5%
+Total simulation time   : 57

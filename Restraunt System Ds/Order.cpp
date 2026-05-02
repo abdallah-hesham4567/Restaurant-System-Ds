@@ -22,7 +22,7 @@ Order::Order(int ID, ORD_TYPE t, int tq, int sz, double pr)
 
     seats = 0;
     duration = 0;
-    canShare = false;
+    canShare = true;
 
     distance = 0;
 

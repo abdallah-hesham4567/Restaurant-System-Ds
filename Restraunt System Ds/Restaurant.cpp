@@ -344,7 +344,7 @@ void Restaurant::MovePendingToCooking(int timestep)
             o = pendODG.dequeue();
             c = freeCS.dequeue();
         }
-        else if (!pendOVG.isEmpty() && !freeCS.isEmpty())
+        else if (!pendODN.isEmpty() && !freeCS.isEmpty())
         {
             o = pendODN.dequeue();
 
@@ -394,9 +394,21 @@ void Restaurant::MovePendingToCooking(int timestep)
             c = freeCN.dequeue();
         }
 
-        //  stop when no valid pair
-        if (!o || !c)
-            break;
+        //return the order back to pending list if it was dequeued but no chef assigned
+		if (!o || !c) {
+			if (o) {
+                // Return the order back to the pending list
+                switch (o->getType()) {
+                    case ODG: pendODG.enqueue(o); break;
+                    case ODN: pendODN.enqueue(o); break;
+                    case OT:  pendOT.enqueue(o); break;
+                    case OVN: pendOVN.enqueue(o); break;
+                    case OVC: pendOVC.enqueue(o); break;
+                    case OVG: pendOVG.enqueue(o, (int)o->getPriority()); break;
+				}
+                }
+			break;
+        } 
 
         // ===============================
         // Assign order to chef
@@ -551,9 +563,9 @@ void Restaurant::moveReadyToService(int timestep)
         inService.enqueue(o, -finish);
 
         // 4. Re-classify the table after seating
-        if (t->getFreeSeats() > 0 && t->isSharable())
+        if (t->getFreeSeats() > 0 && o->getCanShare())
             busy_sharable.enqueue(t, -t->getFreeSeats()); // best fit = least free seats first
-        else if (t->getFreeSeats() > 0 && !t->isSharable())
+        else if (t->getFreeSeats() > 0 && !o->getCanShare())
             busy_noshare.enqueue(t, -t->getFreeSeats());
         // if no free seats left, table sits out of all lists until moveInServiceToFinished returns it
     }

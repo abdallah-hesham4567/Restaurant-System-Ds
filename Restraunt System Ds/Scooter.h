@@ -45,7 +45,7 @@ public:
     void resetOrders();
 
     bool needsMaintenance() const;
-
+    void resetDistance();
     friend ostream& operator<<(ostream& out, Scooter* s);
 
 

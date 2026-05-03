@@ -12,8 +12,9 @@ int main()
 
     string filename;
     cout << "Enter input file name: ";
-    cin >> filename;
 
+    cin >> filename;
+    filename += ".txt";
     if (!r.loadFromFile(filename))
         return 1;
 

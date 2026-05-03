@@ -5,9 +5,7 @@ Table::Table(int tableID, int cap)
     id = tableID;
     capacity = cap;
     freeSeats = cap;
-
-    sharable = true;
-    freeTime = 0;
+   
 }
 
 int Table::getID() const { return id; }
@@ -16,23 +14,14 @@ int Table::getCapacity() const { return capacity; }
 
 int Table::getFreeSeats() const { return freeSeats; }
 
-bool Table::isSharable() const { return sharable; }
-
-int Table::getFreeTime() const { return freeTime; }
-
-void Table::reserveSeats(int seats, int duration, int currentTime, bool share)
+void Table::reserveSeats(int seats, int duration, int currentTime)
 {
-    freeSeats -= seats;
-	sharable = share;                   
-    freeTime = currentTime + duration;
+    freeSeats -= seats;                 
 }
 
 void Table::releaseSeats(int seats)
 {
-    freeSeats += seats;
-
-    if (freeSeats == capacity)
-        sharable = false;
+    freeSeats += seats;    
 }
 
 ostream& operator<<(ostream& out, Table* t)

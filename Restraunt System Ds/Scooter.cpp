@@ -14,7 +14,7 @@ Scooter::Scooter(int ID, double sp, int mOrders, int mDuration)
     returnTime = 0;
     maintenanceEnd = 0;
 
-
+    // for bonus part
     failed = false;
     failTime = 0;
     distanceCovered = 0;
@@ -38,6 +38,7 @@ void Scooter::setReturnTime(int time)
 void Scooter::setMaintenanceEnd(int time)
 {
     maintenanceEnd = time;
+    resetDistance();
 }
 
 void Scooter::addDistance(double d)
@@ -60,11 +61,17 @@ bool Scooter::needsMaintenance() const
     return deliveredOrders >= maintenanceOrders;
 }
 
+void Scooter::resetDistance()
+{
+    totalDistance = 0.0;
+}
+
 ostream& operator<<(ostream& out, Scooter* s)
 {
     out << "[S" << s->id << "]";
     return out;
 }
+// bonus
 
 void Scooter::setFailed(int time, double covered)
 {

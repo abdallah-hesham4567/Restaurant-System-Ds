@@ -22,12 +22,11 @@ Order::Order(int ID, ORD_TYPE t, int tq, int sz, double pr)
 
     seats = 0;
     duration = 0;
-    canShare = true;
-
     distance = 0;
 
     chefID = scooterID = tableID = -1;
 
+    canShare = false;
     chef = nullptr;
     scooter = nullptr;
     table = nullptr;
@@ -119,7 +118,7 @@ double Order::getPrice() const { return price; }
 
 int Order::getSeats() const { return seats; }
 int Order::getDuration() const { return duration; }
-bool Order::getCanShare() const { return canShare; }
+bool Order::isSharableOrder() const { return canShare; }
 
 int Order::getDistance() const { return distance; }
 
@@ -181,20 +180,7 @@ bool Order::isDelivery() const
     return type == OVC || type == OVG || type == OVN;
 }
 
-bool Order::isTakeaway() const
-{
-    return type == OT;
-}
 
-bool Order::isGrilled() const
-{
-    return type == ODG || type == OVG;
-}
-
-bool Order::isVIP() const
-{
-    return type == OVG;
-}
 
 /*
 ==================================================

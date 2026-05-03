@@ -5,7 +5,6 @@
  Actions
 ==================================================
 */
-
 void UI::printActions(
     LinkedQueue<Request_Action*>& requests,
     LinkedQueue<Cancel_Action*>& cancels)

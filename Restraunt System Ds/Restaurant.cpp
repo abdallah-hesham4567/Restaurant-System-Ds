@@ -13,9 +13,9 @@ Restaurant::Restaurant()
     scooterCount = scooterSpeed = 0;
     maintOrders = maintDuration = 0;
     tableCount = 0;
-    TH = 0;
     totalSimTime = 0;
     interactiveMode = true;
+    failProbability = 0.0;
 }
 
 /*
@@ -81,11 +81,7 @@ void Restaurant::loadScooters()
     }
 }
 
-void Restaurant::loadTables()
-{
-    // Tables are loaded from file in loadFromFile()
-    // Each table pair (count, capacity) is handled there
-}
+
 
 /*
 ==================================================
@@ -132,8 +128,6 @@ bool Restaurant::loadFromFile(const string& filename)
         remaining -= cnt;
     }
 
-    // Line: TH (overwait threshold)
-    fin >> TH;
 
     // Number of actions
     int M;
@@ -160,7 +154,6 @@ bool Restaurant::loadFromFile(const string& filename)
             else if (typ == "OVN") t = OVN;
             else if (typ == "OVC") t = OVC;
             else                   t = OVG;
-
 
             Request_Action* ra = new Request_Action(t, tq, ordID, size, price);
 
@@ -198,7 +191,6 @@ bool Restaurant::loadFromFile(const string& filename)
     // Now load chefs and scooters with the parsed config
     loadChefs();
     loadScooters();
-
     return true;
 }
 
@@ -237,6 +229,7 @@ void Restaurant::Cancel_Order(int id)
     Order* o = nullptr;
 
     // 1. Try pending OVC
+    
     o = pendOVC.CancelAndReturn(id);
     if (o)
     {
@@ -249,6 +242,9 @@ void Restaurant::Cancel_Order(int id)
     o = readyOV.CancelAndReturn(id);
     if (o)
     {
+        ORD_TYPE t = o->getType();
+        if (t != OVC) return;
+
         o->setStatus(CANCELLED_S);
         cancelledOrders.enqueue(o);
         return;
@@ -258,6 +254,9 @@ void Restaurant::Cancel_Order(int id)
     o = cooking.CancelAndReturn(id);
     if (o)
     {
+        ORD_TYPE t = o->getType();
+        if (t != OVC) return;
+
         Chef* c = o->getChef();
         if (c)
         {
@@ -337,7 +336,7 @@ void Restaurant::MovePendingToCooking(int timestep)
         Chef* c = nullptr;
 
         // ===============================
-        // 1) ODG → CS only
+        // 1) ODG → CS only 
         // ===============================
         if (!pendODG.isEmpty() && !freeCS.isEmpty())
         {
@@ -492,11 +491,11 @@ void Restaurant::moveInServiceToFinished(int timestep)
         if (o->isDineIn())
         {
             Table* t = o->getTable();
-
+           
 			t->releaseSeats(o->getSeats());
 			// If now is empty, move to free
             if (t->getFreeSeats() == t->getCapacity())
-            
+
                 freeTables.enqueue(t, -t->getFreeSeats());
 			// If still has free seats, put back in the  busy_sharable list
             else 
@@ -537,7 +536,7 @@ void Restaurant::moveReadyToService(int timestep)
         Order* o = readyOD.peek();
         Table* t = nullptr;
 
-        if (o->getCanShare())
+        if (o->isSharableOrder())
             t = busy_sharable.getBest(o->getSeats());
 
         // 2. If no sharable table fits, try a free table
@@ -552,7 +551,7 @@ void Restaurant::moveReadyToService(int timestep)
         o->setTable(t);
         o->setTableID(t->getID());
 
-        t->reserveSeats(o->getSeats(), o->getDuration(), timestep, o->getCanShare());
+        t->reserveSeats(o->getSeats(), o->getDuration(), timestep);
 
         o->setTS(timestep);
         o->setStatus(INSERVICE);
@@ -563,9 +562,9 @@ void Restaurant::moveReadyToService(int timestep)
         inService.enqueue(o, -finish);
 
         // 4. Re-classify the table after seating
-        if (t->getFreeSeats() > 0 && o->getCanShare())
+        if (t->getFreeSeats() > 0 && o->isSharableOrder())
             busy_sharable.enqueue(t, -t->getFreeSeats()); // best fit = least free seats first
-        else if (t->getFreeSeats() > 0 && !o->getCanShare())
+        else if (t->getFreeSeats() > 0 && !o->isSharableOrder())
             busy_noshare.enqueue(t, -t->getFreeSeats());
         // if no free seats left, table sits out of all lists until moveInServiceToFinished returns it
     }
@@ -581,7 +580,7 @@ void Restaurant::moveReadyToService(int timestep)
         o->setTS(timestep);
         o->setStatus(INSERVICE);
 
-		int finish = timestep + (o->getDistance() / s->getSpeed()) + 1;  // +1 for handing over the order
+		int finish = timestep + ceil((double)o->getDistance() / s->getSpeed());
         o->setFinishServiceTime(finish);
 
        
@@ -624,6 +623,7 @@ void Restaurant::updateScooters(int timestep)
             {
                 s->setMaintenanceEnd(timestep + maintDuration);
                 maintenanceScooters.enqueue(s);
+                 
             }
             else
                 freeScooters.enqueue(s, -(int)s->getDistanceCut());
@@ -647,10 +647,7 @@ void Restaurant::updateScooters(int timestep)
     }
 }
 
-void Restaurant::updateTables(int /*timestep*/)
-{
-    // reserved for future use
-}
+
 
 /*
 ==================================================
@@ -812,8 +809,6 @@ void Restaurant::simulate()
         
         // Feature 5: update scooter lists
         updateScooters(timestep);
-
-        updateTables(timestep);
 
         if (interactiveMode)
         {

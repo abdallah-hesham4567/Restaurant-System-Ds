@@ -36,8 +36,6 @@ public:
     string getOrderType() const;
 
     void Act(Restaurant* pRest) override;
-
-
     void setOrder(Order* o) { order = o; }
     Order* getOrder() const { return order; }
 };

@@ -57,37 +57,7 @@ public:
         return table;
     }
 
-    bool removeTable(int id)
-    {
-        if (isEmpty())
-            return false;
-
-        if (head->item->getID() == id)
-        {
-            dequeue();
-            return true;
-        }
-
-        Node<Table*>* current = head;
-
-        while (current->next)
-        {
-            if (current->next->item->getID() == id)
-            {
-                Node<Table*>* temp = current->next;
-
-                current->next = temp->next;
-                delete temp;
-
-                count--;
-                return true;
-            }
-
-            current = current->next;
-        }
-
-        return false;
-    }
+   
 
     void printIDs() const
     {

@@ -73,7 +73,7 @@ private:
     Stack<Order*>        finishedOrders;
     LinkedQueue<Order*>  cancelledOrders;
 
-	//// bonus part
+	// bonus part
     PriQueue<Order*> rescueInService;  // orders being rescued, key=new finish time
     double failProbability;            // read from file e.g. 0.05 // static data
 
@@ -86,7 +86,6 @@ private:
     int scooterCount, scooterSpeed;
     int maintOrders, maintDuration;
     int tableCount;
-    int TH;                 // overwait threshold
     bool interactiveMode;
 
     // Statistics helpers
@@ -102,15 +101,13 @@ private:
     void moveToReady(Order* order);
 
     // --- Phase 2 internal steps ---
-    void processActions(int timestep);   // Feature 3 & 4
-    void MovePendingToCooking(int timestep);    // Feature 8
-    void MoveCookingToReady(int timestep);    // Feature 9
-    void moveReadyToService(int timestep);       // Features 10,11,12
-    void moveInServiceToFinished(int timestep);  // Features 6 & 7
-    void updateScooters(int timestep);   // Feature 5
-    void updateTables(int timestep);
-
-    void generateOutputFile();           // Feature 13
+    void processActions(int timestep);           // Features 3, 4
+    void MovePendingToCooking(int timestep);     // Feature 8
+    void MoveCookingToReady(int timestep);       // Feature 9
+    void moveReadyToService(int timestep);       // Features 10, 11, 12
+    void moveInServiceToFinished(int timestep);  // Features 6, 7
+    void updateScooters(int timestep);           // Feature 5
+    void generateOutputFile();                   // Feature 13
 
 public:
 
@@ -121,7 +118,6 @@ public:
 
     void loadChefs();
     void loadScooters();
-    void loadTables();
 
     // Feature 2
     bool loadFromFile(const string& filename);

@@ -111,17 +111,5 @@ public:
         }
     }
 
-    int getRandomID() const
-    {
-        if (isEmpty())
-            return -1;
-
-        int steps = rand() % count;
-        Node<T>* current = head;
-
-        for (int i = 0; i < steps; i++)
-            current = current->next;
-
-        return current->item->getID();
-    }
+   
 };

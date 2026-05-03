@@ -11,8 +11,8 @@ private:
     int capacity;
     int freeSeats;
 
-    bool sharable;
-    int freeTime;
+  
+   
 
 public:
 
@@ -21,10 +21,8 @@ public:
     int getID() const;
     int getCapacity() const;
     int getFreeSeats() const;
-    bool isSharable() const;
-    int getFreeTime() const;
 
-    void reserveSeats(int seats, int duration, int currentTime, bool share);
+    void reserveSeats(int seats, int duration, int currentTime);
     void releaseSeats(int seats);
 
     friend ostream& operator<<(ostream& out, Table* t);

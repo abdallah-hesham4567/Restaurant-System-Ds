@@ -87,7 +87,7 @@ public:
 
     int getSeats() const;
     int getDuration() const;
-    bool getCanShare() const;
+    bool isSharableOrder() const;
 
     int getDistance() const;
 
@@ -124,9 +124,7 @@ public:
     // Helpers
     bool isDineIn() const;
     bool isDelivery() const;
-    bool isTakeaway() const;
-    bool isGrilled() const;
-    bool isVIP() const;
+   
 
     // Calculations
     int getTi() const;

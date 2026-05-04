@@ -343,7 +343,8 @@ void Restaurant::MovePendingToCooking(int timestep)
             o = pendODG.dequeue();
             c = freeCS.dequeue();
         }
-        else if (!pendODN.isEmpty() && !freeCS.isEmpty())
+
+        else if (!pendODN.isEmpty())
         {
             o = pendODN.dequeue();
 
@@ -867,7 +868,7 @@ void Restaurant::checkRescue(int timestep)
         {
             double roll = (rand() % 1000) / 1000.0;
 			// if (roll < failProbability)  // use it as a random failure trigger if you want non-deterministic failures
-			if (false)  // for testing, force a failure every 5 timesteps if there's a free scooter to rescue with
+			if (true)  // for testing, force a failure every 5 timesteps if there's a free scooter to rescue with
             {
                 Scooter* failed = o->getScooter();
 
@@ -877,13 +878,13 @@ void Restaurant::checkRescue(int timestep)
                 if (remaining < 0) remaining = 0;
 
                 failed->setFailed(timestep, covered);
-                int failedBack = timestep + (int)(covered / failed->getSpeed()) + 1;
+                int failedBack = timestep + ceil((double)(covered / failed->getSpeed())) ;
                 failed->setReturnTime(failedBack);
                 backScooters.enqueue(failed, -failedBack);
 
                 Scooter* rescue = freeScooters.dequeue();
-                int rescueArrival = timestep + (int)(covered / rescue->getSpeed()) + 1;
-                int newFinish = rescueArrival + (int)(remaining / rescue->getSpeed()) + 1;
+                int rescueArrival = timestep + ceil((double)(covered / failed->getSpeed()));
+                int newFinish = rescueArrival + ceil((double)(remaining / rescue->getSpeed()));
 
                 o->setScooter(rescue);
                 o->setScooterID(rescue->getID());

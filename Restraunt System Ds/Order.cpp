@@ -31,9 +31,6 @@ Order::Order(int ID, ORD_TYPE t, int tq, int sz, double pr)
     scooter = nullptr;
     table = nullptr;
 
-    finishCookTime = 0;
-    finishServiceTime = 0;
-
     status = PENDING;
 }
 
@@ -61,9 +58,7 @@ Order::Order(int ID, ORD_TYPE t, int tq, int sz, double pr,
     scooter = nullptr;
     table = nullptr;
 
-    finishCookTime = 0;
-    finishServiceTime = 0;
-
+   
     status = PENDING;
 }
 
@@ -91,8 +86,7 @@ Order::Order(int ID, ORD_TYPE t, int tq, int sz, double pr,
     scooter = nullptr;
     table = nullptr;
 
-    finishCookTime = 0;
-    finishServiceTime = 0;
+  
 
     status = PENDING;
 }
@@ -126,8 +120,7 @@ int Order::getChefID() const { return chefID; }
 int Order::getScooterID() const { return scooterID; }
 int Order::getTableID() const { return tableID; }
 
-int Order::getFinishCookTime() const { return finishCookTime; }
-int Order::getFinishServiceTime() const { return finishServiceTime; }
+
 
 Chef* Order::getChef() const { return chef; }
 Scooter* Order::getScooter() const { return scooter; }
@@ -149,16 +142,6 @@ void Order::setTF(int time) { TF = time; }
 void Order::setChefID(int ID) { chefID = ID; }
 void Order::setScooterID(int ID) { scooterID = ID; }
 void Order::setTableID(int ID) { tableID = ID; }
-
-void Order::setFinishCookTime(int time)
-{
-    finishCookTime = time;
-}
-
-void Order::setFinishServiceTime(int time)
-{
-    finishServiceTime = time;
-}
 
 void Order::setChef(Chef* c) { chef = c; }
 void Order::setScooter(Scooter* s) { scooter = s; }

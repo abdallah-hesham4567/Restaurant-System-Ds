@@ -385,7 +385,7 @@ void UI::printTimestep(
         << timestep << endl;
     cout << "========================================\n\n";
 
-   /* printActions(requests, cancels);*/
+    printActions(requests, cancels);
 
     printPendingOrders(
         pendODG, pendODN,

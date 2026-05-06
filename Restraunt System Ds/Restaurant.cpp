@@ -255,8 +255,13 @@ void Restaurant::Cancel_Order(int id)
     if (o)
     {
         ORD_TYPE t = o->getType();
-        if (t != OVC) return;
+        if (t != OVC) {
+            cooking.enqueue(o, -o->getTR());
+            return;
+        }
+    
 
+    
         Chef* c = o->getChef();
         if (c)
         {
@@ -321,6 +326,24 @@ void Restaurant::moveToReady(Order* o)
         readyOD.enqueue(o);
 }
 
+int Restaurant::leastPendTQ()
+{
+    int least = 1000000;
+    if (!pendODG.isEmpty())
+        least = min(least, pendODG.peek()->getTQ());
+    if (!pendODN.isEmpty())
+        least = min(least, pendODN.peek()->getTQ());
+    if (!pendOT.isEmpty())
+        least = min(least, pendOT.peek()->getTQ());
+    if (!pendOVN.isEmpty())
+        least = min(least, pendOVN.peek()->getTQ());
+    if (!pendOVC.isEmpty())
+        least = min(least, pendOVC.peek()->getTQ());
+    if (!pendOVG.isEmpty())
+        least = min(least, pendOVG.peek()->getTQ());
+	return least;
+}
+
 /*
 ==================================================
 Assign Orders To Chefs  [Feature 8]
@@ -334,11 +357,11 @@ void Restaurant::MovePendingToCooking(int timestep)
     {
         Order* o = nullptr;
         Chef* c = nullptr;
-
+		int leastTQ = leastPendTQ();
         // ===============================
         // 1) ODG → CS only 
         // ===============================
-        if (!pendODG.isEmpty() && !freeCS.isEmpty())
+        if (!pendODG.isEmpty() && !freeCS.isEmpty()&& pendODG.peek()->getTQ() == leastTQ)
         {
             o = pendODG.dequeue();
             c = freeCS.dequeue();
@@ -357,7 +380,7 @@ void Restaurant::MovePendingToCooking(int timestep)
         // ===============================
         // 3) OT → CN only
         // ===============================
-        else if (!pendOT.isEmpty() && !freeCN.isEmpty())
+        else if (!pendOT.isEmpty() && !freeCN.isEmpty() && pendOT.peek()->getTQ() == leastTQ)
         {
             o = pendOT.dequeue();
             c = freeCN.dequeue();
@@ -366,7 +389,7 @@ void Restaurant::MovePendingToCooking(int timestep)
         // ===============================
         // 4) OVG → CS only
         // ===============================
-        else if (!pendOVG.isEmpty() && !freeCS.isEmpty())
+        else if (!pendOVG.isEmpty() && !freeCS.isEmpty() && pendOVG.peek()->getTQ() == leastTQ)
         {
             o = pendOVG.dequeue();
             c = freeCS.dequeue();
@@ -375,7 +398,7 @@ void Restaurant::MovePendingToCooking(int timestep)
         // ===============================
         // 5) OVC → CN then CS
         // ===============================
-        else if (!pendOVC.isEmpty())
+        else if (!pendOVC.isEmpty() && pendOVC.peek()->getTQ() == leastTQ)
         {
             o = pendOVC.dequeue();
 
@@ -388,7 +411,7 @@ void Restaurant::MovePendingToCooking(int timestep)
         // ===============================
         // 6) OVN → CN only
         // ===============================
-        else if (!pendOVN.isEmpty() && !freeCN.isEmpty())
+        else if (!pendOVN.isEmpty() && !freeCN.isEmpty() && pendOVN.peek()->getTQ() == leastTQ)
         {
             o = pendOVN.dequeue();
             c = freeCN.dequeue();
@@ -421,9 +444,7 @@ void Restaurant::MovePendingToCooking(int timestep)
         // Calculate cooking time correctly
         int cookTime = ceil((double)o->getSize() / c->getSpeed());
         int finishTime = timestep + cookTime;
-
-        o->setFinishCookTime(finishTime);
-
+         o->setTR(finishTime);
         // Update chef
         c->setBusy(true);
         c->addBusyTime(cookTime);
@@ -441,7 +462,7 @@ void Restaurant::MoveCookingToReady(int timestep)
         Order* o = cooking.peek();
 
         // Not finished yet → stop
-        if (o->getFinishCookTime() > timestep)
+        if (o->getTR() > timestep)
             break;
 
         // Remove from cooking
@@ -478,7 +499,7 @@ void Restaurant::moveInServiceToFinished(int timestep)
         Order* o = inService.peek();
 
         // If not finished yet → stop
-        if (o->getFinishServiceTime() > timestep)
+        if (o->getTF() > timestep)
             break;
 
         inService.dequeue();
@@ -521,6 +542,18 @@ void Restaurant::moveInServiceToFinished(int timestep)
         // =========================
         finishedOrders.push(o);
     }
+
+    while (!readyOT.isEmpty())
+    {
+        Order* o = readyOT.dequeue();
+
+        o->setTS(timestep);
+
+        o->setTF(timestep+1);
+        o->setTF(timestep+1);
+        o->setStatus(FINISHED_S);
+        finishedOrders.push(o);
+    }
 }
 
 /*
@@ -558,7 +591,7 @@ void Restaurant::moveReadyToService(int timestep)
         o->setStatus(INSERVICE);
 
         int finish = timestep + o->getDuration();
-        o->setFinishServiceTime(finish);
+        o->setTF(finish);
 
         inService.enqueue(o, -finish);
 
@@ -582,7 +615,7 @@ void Restaurant::moveReadyToService(int timestep)
         o->setStatus(INSERVICE);
 
 		int finish = timestep + ceil((double)o->getDistance() / s->getSpeed());
-        o->setFinishServiceTime(finish);
+        o->setTF(finish);
 
        
         s->addDistance(o->getDistance());
@@ -591,16 +624,17 @@ void Restaurant::moveReadyToService(int timestep)
     }
 
     // --- Takeaway Orders [Feature 12] ---
-    while (!readyOT.isEmpty())
+   /* while (!readyOT.isEmpty())
     {
         Order* o = readyOT.dequeue();
 
         o->setTS(timestep);
-        o->setTF(timestep + 1);
-        o->setStatus(FINISHED_S);
 
+        o->setFinishServiceTime(timestep);
+        o->setTF(timestep);
+        o->setStatus(FINISHED_S);
         finishedOrders.push(o);
-    }
+    }*/
 }
 
 /*
@@ -868,7 +902,7 @@ void Restaurant::checkRescue(int timestep)
         {
             double roll = (rand() % 1000) / 1000.0;
 			// if (roll < failProbability)  // use it as a random failure trigger if you want non-deterministic failures
-			if (true)  // for testing, force a failure every 5 timesteps if there's a free scooter to rescue with
+			if (false)  // for testing, force a failure every 5 timesteps if there's a free scooter to rescue with
             {
                 Scooter* failed = o->getScooter();
 
@@ -888,7 +922,7 @@ void Restaurant::checkRescue(int timestep)
 
                 o->setScooter(rescue);
                 o->setScooterID(rescue->getID());
-                o->setFinishServiceTime(newFinish);
+                o->setTF(newFinish);
 
                 rescue->incrementOrders();
                 rescue->addDistance(o->getDistance());
@@ -901,6 +935,6 @@ void Restaurant::checkRescue(int timestep)
                     << " -> new finish=" << newFinish << "\n";
             }
         }
-        inService.enqueue(o, -o->getFinishServiceTime());
+        inService.enqueue(o, -o->getTF());
     }
 }

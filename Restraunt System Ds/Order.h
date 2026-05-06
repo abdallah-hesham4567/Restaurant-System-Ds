@@ -59,9 +59,6 @@ private:
     Scooter* scooter;
     Table* table;
 
-    int finishCookTime;
-    int finishServiceTime;
-
 public:
 
     // Constructors
@@ -95,8 +92,8 @@ public:
     int getScooterID() const;
     int getTableID() const;
 
-    int getFinishCookTime() const;
-    int getFinishServiceTime() const;
+    
+    
 
     Chef* getChef() const;
     Scooter* getScooter() const;
@@ -114,8 +111,8 @@ public:
     void setScooterID(int ID);
     void setTableID(int ID);
 
-    void setFinishCookTime(int time);
-    void setFinishServiceTime(int time);
+    
+    
 
     void setChef(Chef* c);
     void setScooter(Scooter* s);

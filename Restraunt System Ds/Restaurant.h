@@ -75,7 +75,7 @@ private:
 
 	// bonus part
     PriQueue<Order*> rescueInService;  // orders being rescued, key=new finish time
-    double failProbability;            // read from file e.g. 0.05 // static data
+    double failProbability;            //static value for test
 
 
 
@@ -99,6 +99,7 @@ private:
     bool allDone();
 
     void moveToReady(Order* order);
+	void moveOTsToFinish(int timestep);
     int leastPendTQ();
     // --- Phase 2 internal steps ---
     void processActions(int timestep);           // Features 3, 4

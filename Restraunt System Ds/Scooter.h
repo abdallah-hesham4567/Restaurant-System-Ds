@@ -18,7 +18,7 @@ private:
 
     int returnTime;
     int maintenanceEnd;
-
+    int busyTime;
 
 /// /////// bonus part
     bool failed;
@@ -47,6 +47,10 @@ public:
     bool needsMaintenance() const;
     void resetDistance();
     friend ostream& operator<<(ostream& out, Scooter* s);
+
+    void addBusyTime(int t);
+    int getBusyTime() const;
+
 
 
 	/////bonus part

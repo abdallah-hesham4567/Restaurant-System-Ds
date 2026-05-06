@@ -13,7 +13,7 @@ Scooter::Scooter(int ID, double sp, int mOrders, int mDuration)
 
     returnTime = 0;
     maintenanceEnd = 0;
-
+    busyTime = 0;
     // for bonus part
     failed = false;
     failTime = 0;
@@ -66,11 +66,24 @@ void Scooter::resetDistance()
     totalDistance = 0.0;
 }
 
+void Scooter::addBusyTime(int t)
+{
+    busyTime += t;
+}
+
+int Scooter::getBusyTime() const
+{
+    return busyTime;
+}
+
 ostream& operator<<(ostream& out, Scooter* s)
 {
     out << "[S" << s->id << "]";
     return out;
 }
+
+
+
 // bonus
 
 void Scooter::setFailed(int time, double covered)

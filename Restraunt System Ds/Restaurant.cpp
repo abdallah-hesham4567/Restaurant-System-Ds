@@ -13,7 +13,7 @@ Restaurant::Restaurant()
     tableCount = 0;
     totalSimTime = 0;
     interactiveMode = true;
-    failProbability = 0.0;
+    failProbability = 0.2;
 }
 
 // check if all pending queues are empty
@@ -42,7 +42,8 @@ bool Restaurant::allDone()
         pendingEmpty() &&
         cooking.isEmpty() &&
         readyEmpty() &&
-        inService.isEmpty();
+		inService.isEmpty() && backScooters.isEmpty()&&
+		 maintenanceScooters.isEmpty();
 }
 
 
@@ -72,9 +73,6 @@ void Restaurant::loadScooters()
         freeScooters.enqueue(s, -(int)s->getDistanceCut());
     }
 }
-
-
-
 
 // Load From File  [Feature 2]
 
@@ -302,10 +300,23 @@ void Restaurant::moveToReady(Order* o)
     else
         readyOD.enqueue(o);
 }
+// Move OTs to Finished directly since they don't need service  
+void Restaurant::moveOTsToFinish(int timestep)
+{
+    while (!readyOT.isEmpty())
+    {
+        Order* o = readyOT.dequeue();
+
+        o->setTS(timestep);
+        o->setTF(timestep + 1);
+        o->setStatus(FINISHED_S);
+        finishedOrders.push(o);
+    }
+}
 
 int Restaurant::leastPendTQ()
 {
-    int least = 1000000;
+    int least = INT_MAX;
     if (!pendODG.isEmpty())
         least = min(least, pendODG.peek()->getTQ());
     if (!pendODN.isEmpty())
@@ -511,15 +522,7 @@ void Restaurant::moveInServiceToFinished(int timestep)
         finishedOrders.push(o);
     }
 
-    while (!readyOT.isEmpty())
-    {
-        Order* o = readyOT.dequeue();
-
-        o->setTS(timestep);
-        o->setTF(timestep+1);
-        o->setStatus(FINISHED_S);
-        finishedOrders.push(o);
-    }
+	moveOTsToFinish(timestep);
 }
 
 
@@ -581,9 +584,11 @@ void Restaurant::moveReadyToService(int timestep)
 		int finish = timestep + ceil((double)o->getDistance() / s->getSpeed());
         o->setTF(finish);
 
-       
+        double totalbusy = (double)o->getDistance() / s->getSpeed();
+		totalbusy *= 2; // busy for both going and coming back
+		totalbusy = ceil(totalbusy);
         s->addDistance(o->getDistance());
-
+        s->addBusyTime(totalbusy);
         inService.enqueue(o, -finish);
     }
 
@@ -604,11 +609,10 @@ void Restaurant::updateScooters(int timestep)
         {
             backScooters.dequeue();
 
-            if (s->needsMaintenance())
+            if (s->needsMaintenance() || s->hasFailed())
             {
                 s->setMaintenanceEnd(timestep + maintDuration);
-                maintenanceScooters.enqueue(s);
-                 
+                maintenanceScooters.enqueue(s);      
             }
             else
                 freeScooters.enqueue(s, -(int)s->getDistanceCut());
@@ -624,7 +628,9 @@ void Restaurant::updateScooters(int timestep)
         if (s->getMaintenanceEnd() <= timestep)
         {
             maintenanceScooters.dequeue();
+			s->addBusyTime(maintDuration);
             s->resetOrders();
+            s->resetFailed();
             freeScooters.enqueue(s, -(int)s->getDistanceCut());
         }
         else
@@ -711,7 +717,11 @@ void Restaurant::generateOutputFile()
 
     int canCount = cancelledOrders.getCount();
     int total = finCount + canCount;
+    double finPercent =
+        total ? (finCount * 100.0 / total) : 0;
 
+    double canPercent =
+        total ? (canCount * 100.0 / total) : 0;
     // chef busy time
     int csBusy = 0, cnBusy = 0;
     // iterate free chefs (all chefs are free at end of sim)
@@ -724,10 +734,31 @@ void Restaurant::generateOutputFile()
     double chefUtil = totalChefs > 0 && totalSimTime > 0
         ? (totalChefBusy * 100.0) / (totalSimTime * totalChefs) : 0;
 
+    int totalScooterBusy = 0;
+	Node<Scooter*>* curS = freeScooters.getFront();
+	while (curS) { totalScooterBusy += curS->item->getBusyTime(); curS = curS->next; }
+
+    double scooterUtil =
+        scooterCount > 0 && totalSimTime > 0
+        ? (totalScooterBusy * 100.0)
+        / (totalSimTime * scooterCount)
+        : 0;
+
+
     fout << "\n--- Statistics ---\n";
     fout << "Total orders     : " << total << "\n";
     fout << "Finished orders  : " << finCount << "\n";
     fout << "Cancelled orders : " << canCount << "\n";
+    fout << "\nOrder percentages:\n";
+
+    fout << "  Finished orders %  : "
+        << fixed << setprecision(2)
+        << finPercent << "%\n";
+
+    fout << "  Cancelled orders % : "
+        << fixed << setprecision(2)
+        << canPercent << "%\n";
+
     fout << "\nOrders per type:\n";
     fout << "  ODG:" << cntODG << "  ODN:" << cntODN << "  OT:" << cntOT
         << "  OVN:" << cntOVN << "  OVC:" << cntOVC << "  OVG:" << cntOVG << "\n";
@@ -735,7 +766,23 @@ void Restaurant::generateOutputFile()
     fout << "Avg cooking time (TC)   : " << fixed << setprecision(2) << (finCount ? sumTC / finCount : 0) << "\n";
     fout << "Avg total wait   (Tw)   : " << fixed << setprecision(2) << (finCount ? sumTw / finCount : 0) << "\n";
     fout << "Avg service time (Tserv): " << fixed << setprecision(2) << (finCount ? sumTserv / finCount : 0) << "\n";
+   
+    
+    fout << "\nChefs:\n";
+    fout << "  Total chefs : " << totalChefs << "\n";
+    fout << "  CS chefs    : " << csCount << "\n";
+    fout << "  CN chefs    : " << cnCount << "\n";
+
+    fout << "\nScooters:\n";
+    fout << "  Total scooters : " << scooterCount << "\n";
+    
+    
     fout << "Chef utilization        : " << fixed << setprecision(1) << chefUtil << "%\n";
+    fout << "Scooter utilization    : "
+        << fixed << setprecision(1)
+        << scooterUtil << "%\n\n";
+
+    
     fout << "Total simulation time   : " << totalSimTime << "\n";
 
     fout.close();
@@ -780,8 +827,8 @@ void Restaurant::simulate()
         moveReadyToService(timestep);
 
 
-        // bonus
-        checkRescue(timestep);
+
+       
         // Features 6 & 7: move finished in-service orders out
         moveInServiceToFinished(timestep);
 
@@ -789,6 +836,7 @@ void Restaurant::simulate()
         // Feature 5: update scooter lists
         updateScooters(timestep);
 
+        checkRescue(timestep);
         if (interactiveMode)
         {
             ui.printTimestep(
@@ -822,8 +870,8 @@ void Restaurant::simulate()
 //bonus part
 void Restaurant::checkRescue(int timestep)
 {
-    // Only check every 5 timesteps
-    if (timestep % 5 != 0) return;
+    // Only check every 50 timesteps
+    if (timestep % 50 != 0) return;
 
     if (freeScooters.isEmpty()) return;
 
@@ -845,7 +893,7 @@ void Restaurant::checkRescue(int timestep)
             !freeScooters.isEmpty())
         {
             double roll = (rand() % 1000) / 1000.0;
-			// if (roll < failProbability)  // use it as a random failure trigger if you want non-deterministic failures
+			 if (roll < failProbability)  // use it as a random failure trigger if you want non-deterministic failures
 			if (false)  // for testing, force a failure every 5 timesteps if there's a free scooter to rescue with
             {
                 Scooter* failed = o->getScooter();
@@ -870,7 +918,7 @@ void Restaurant::checkRescue(int timestep)
 
                 rescue->incrementOrders();
                 rescue->addDistance(o->getDistance());
-
+				rescue->addBusyTime(ceil((double)(o->getDistance() / rescue->getSpeed())) * 2); // busy for both going and coming back
                 // Only print when rescue actually happens
                 cout << "[RESCUE] TS=" << timestep
                     << " S" << failed->getID() << " failed!"

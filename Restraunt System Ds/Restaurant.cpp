@@ -1,10 +1,8 @@
 ﻿#include "Restaurant.h"
 #include <iomanip>
-/*
-==================================================
-Constructor
-==================================================
-*/
+
+// Constructor
+
 
 Restaurant::Restaurant()
 {
@@ -18,11 +16,7 @@ Restaurant::Restaurant()
     failProbability = 0.0;
 }
 
-/*
-==================================================
-Checks
-==================================================
-*/
+// check if all pending queues are empty
 
 bool Restaurant::pendingEmpty()
 {
@@ -51,11 +45,9 @@ bool Restaurant::allDone()
         inService.isEmpty();
 }
 
-/*
-==================================================
-Load Resources
-==================================================
-*/
+
+// Load Resources
+
 
 void Restaurant::loadChefs()
 {
@@ -83,11 +75,9 @@ void Restaurant::loadScooters()
 
 
 
-/*
-==================================================
-Load From File  [Feature 2]
-==================================================
-*/
+
+// Load From File  [Feature 2]
+
 
 bool Restaurant::loadFromFile(const string& filename)
 {
@@ -194,11 +184,7 @@ bool Restaurant::loadFromFile(const string& filename)
     return true;
 }
 
-/*
-==================================================
-Add Order
-==================================================
-*/
+// Add Order To Pending List  [Feature 3]
 
 void Restaurant::AddOrder(Order* order)
 {
@@ -218,11 +204,9 @@ void Restaurant::AddOrder(Order* order)
         pendOVG.enqueue(order, (int)order->getPriority());
 }
 
-/*
-==================================================
-Cancel Order  [Feature 4]
-==================================================
-*/
+
+// Cancel Order  [Feature 4]
+
 
 void Restaurant::Cancel_Order(int id)
 {
@@ -276,12 +260,9 @@ void Restaurant::Cancel_Order(int id)
     }
 }
 
-/*
-==================================================
-Process Actions  [Feature 3 & 4]
-Move due Request/Cancel actions to pending lists
-==================================================
-*/
+
+// Process Actions  [Feature 3 & 4]
+
 
 void Restaurant::processActions(int timestep)
 {
@@ -308,11 +289,7 @@ void Restaurant::processActions(int timestep)
     }
 }
 
-/*
-==================================================
-Move To Ready
-==================================================
-*/
+// Move To Ready  [Helper]
 
 void Restaurant::moveToReady(Order* o)
 {
@@ -344,11 +321,8 @@ int Restaurant::leastPendTQ()
 	return least;
 }
 
-/*
-==================================================
-Assign Orders To Chefs  [Feature 8]
-==================================================
-*/
+
+// Assign Orders To Chefs  [Feature 8]
 
 void Restaurant::MovePendingToCooking(int timestep)
 {
@@ -358,9 +332,9 @@ void Restaurant::MovePendingToCooking(int timestep)
         Order* o = nullptr;
         Chef* c = nullptr;
 		int leastTQ = leastPendTQ();
-        // ===============================
-        // 1) ODG → CS only 
-        // ===============================
+        
+        // 1) ODG to CS only 
+        
         if (!pendODG.isEmpty() && !freeCS.isEmpty()&& pendODG.peek()->getTQ() == leastTQ)
         {
             o = pendODG.dequeue();
@@ -377,27 +351,27 @@ void Restaurant::MovePendingToCooking(int timestep)
                 c = freeCS.dequeue();
         }
 
-        // ===============================
-        // 3) OT → CN only
-        // ===============================
+        
+        // 3) OT to CN only
+        
         else if (!pendOT.isEmpty() && !freeCN.isEmpty() && pendOT.peek()->getTQ() == leastTQ)
         {
             o = pendOT.dequeue();
             c = freeCN.dequeue();
         }
 
-        // ===============================
+        
         // 4) OVG → CS only
-        // ===============================
+        
         else if (!pendOVG.isEmpty() && !freeCS.isEmpty() && pendOVG.peek()->getTQ() == leastTQ)
         {
             o = pendOVG.dequeue();
             c = freeCS.dequeue();
         }
 
-        // ===============================
+        
         // 5) OVC → CN then CS
-        // ===============================
+        
         else if (!pendOVC.isEmpty() && pendOVC.peek()->getTQ() == leastTQ)
         {
             o = pendOVC.dequeue();
@@ -408,9 +382,9 @@ void Restaurant::MovePendingToCooking(int timestep)
                 c = freeCS.dequeue();
         }
 
-        // ===============================
+        
         // 6) OVN → CN only
-        // ===============================
+        
         else if (!pendOVN.isEmpty() && !freeCN.isEmpty() && pendOVN.peek()->getTQ() == leastTQ)
         {
             o = pendOVN.dequeue();
@@ -433,9 +407,9 @@ void Restaurant::MovePendingToCooking(int timestep)
 			break;
         } 
 
-        // ===============================
+        
         // Assign order to chef
-        // ===============================
+        
         o->setChef(c);
         o->setChefID(c->getID());
         o->setTA(timestep);
@@ -486,11 +460,9 @@ void Restaurant::MoveCookingToReady(int timestep)
     }
 }
 
-/*
-==================================================
-Move InService -> Finished  [Feature 6 & 7]
-==================================================
-*/
+
+// Move InService -> Finished  [Feature 6 & 7]
+
 
 void Restaurant::moveInServiceToFinished(int timestep)
 {
@@ -507,9 +479,8 @@ void Restaurant::moveInServiceToFinished(int timestep)
         o->setTF(timestep);
         o->setStatus(FINISHED_S);
 
-        // =========================
+        
         // DINE-IN ORDERS 
-        // =========================
         if (o->isDineIn())
         {
             Table* t = o->getTable();
@@ -537,9 +508,6 @@ void Restaurant::moveInServiceToFinished(int timestep)
             backScooters.enqueue(s, -backTime);
         }
 
-        // =========================
-        // FINISH
-        // =========================
         finishedOrders.push(o);
     }
 
@@ -548,23 +516,19 @@ void Restaurant::moveInServiceToFinished(int timestep)
         Order* o = readyOT.dequeue();
 
         o->setTS(timestep);
-
-        o->setTF(timestep+1);
         o->setTF(timestep+1);
         o->setStatus(FINISHED_S);
         finishedOrders.push(o);
     }
 }
 
-/*
-==================================================
-Ready -> Service  [Features 10, 11, 12]
-==================================================
-*/
+
+// Move Ready -> Service  [Features 10, 11, 12]
+
 
 void Restaurant::moveReadyToService(int timestep)
 {
-    // --- Dine-In Orders [Feature 10] ---
+    // --- Dine-In Orders [Feature 10] 
     while (!readyOD.isEmpty())
     {
         Order* o = readyOD.peek();
@@ -623,25 +587,11 @@ void Restaurant::moveReadyToService(int timestep)
         inService.enqueue(o, -finish);
     }
 
-    // --- Takeaway Orders [Feature 12] ---
-   /* while (!readyOT.isEmpty())
-    {
-        Order* o = readyOT.dequeue();
-
-        o->setTS(timestep);
-
-        o->setFinishServiceTime(timestep);
-        o->setTF(timestep);
-        o->setStatus(FINISHED_S);
-        finishedOrders.push(o);
-    }*/
+    
 }
 
-/*
-==================================================
-Scooters Update  [Feature 5]
-==================================================
-*/
+
+//Scooters Update  [Feature 5]
 
 void Restaurant::updateScooters(int timestep)
 {
@@ -684,11 +634,8 @@ void Restaurant::updateScooters(int timestep)
 
 
 
-/*
-==================================================
-Generate Output File  [Feature 13]
-==================================================
-*/
+
+//Generate Output File  [Feature 13]
 
 void Restaurant::generateOutputFile()
 {
@@ -795,11 +742,8 @@ void Restaurant::generateOutputFile()
     cout << "Output file created: output.txt\n";
 }
 
-/*
-==================================================
-Main Simulation Loop  [Feature 1]
-==================================================
-*/
+
+//Main Simulation Loop  [Feature 1]
 
 void Restaurant::simulate()
 {

@@ -202,9 +202,9 @@ double Order::getPriority() const
     if (type != OVG)
         return 0;
 
-    return price * 0.5 +
-        size * 0.3 +
-        distance * 0.2;
+    return price * 5 +
+        size * 3 +
+        distance * 2;
 }
 
 /*
